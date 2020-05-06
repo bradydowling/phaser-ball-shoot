@@ -27,10 +27,10 @@ const keys = {};
 let gameStarted = false;
 let openingText;
 const playerMovement = {
-  jumpSpeed: 1500,
+  jumpSpeed: 4000,
   runSpeed: 350,
   slowdown: 200,
-  bounce: 0.2,
+  bounce: 0.1,
 };
 const ballMovement = {
   bounce: 0.5,
@@ -80,6 +80,14 @@ function create() {
 }
 
 function update() {
+  if (!gameStarted) {
+    if (cursors.space.isDown) {
+      ball.setVisible(true);
+      gameStarted = true;
+      openingText.setVisible(false);
+    }
+  }
+
   if (cursors.left.isDown) {
     player1.body.setVelocityX(-playerMovement.runSpeed);
   } else if (cursors.right.isDown) {
@@ -92,14 +100,6 @@ function update() {
     player1.body.velocity.x -= playerMovement.slowdown;
   } else if (player1.body.velocity.x < 0) {
     player1.body.velocity.x += playerMovement.slowdown;
-  }
-
-  if (!gameStarted) {
-    if (cursors.space.isDown) {
-      ball.setVisible(true);
-      gameStarted = true;
-      openingText.setVisible(false);
-    }
   }
 }
 
