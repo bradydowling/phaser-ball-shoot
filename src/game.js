@@ -29,7 +29,7 @@ let openingText;
 const playerMovement = {
   jumpSpeed: 4000,
   runSpeed: 350,
-  slowdown: 200,
+  slowdown: 50,
   bounce: 0.1,
 };
 const ballMovement = {
@@ -97,9 +97,15 @@ function update() {
       player1.body.setVelocityY(playerMovement.jumpSpeed);
     }
   } else if (player1.body.velocity.x > 0) {
-    player1.body.velocity.x -= playerMovement.slowdown;
+    player1.body.velocity.x = Math.max(
+      player1.body.velocity.x - playerMovement.slowdown,
+      0
+    );
   } else if (player1.body.velocity.x < 0) {
-    player1.body.velocity.x += playerMovement.slowdown;
+    player1.body.velocity.x = Math.min(
+      player1.body.velocity.x + playerMovement.slowdown,
+      0
+    );
   }
 }
 
