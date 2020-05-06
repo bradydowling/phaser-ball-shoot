@@ -1,3 +1,3 @@
-# Phaser3 Pong
+# Ball Shoot
 
-A basic two-player local Pong game using Phaser3
+A basic ball shooting game
