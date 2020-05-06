@@ -15,7 +15,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 500 },
+      gravity: { y: 1000 },
     },
   },
 };
@@ -26,6 +26,15 @@ let player, ball, cursors;
 const keys = {};
 let gameStarted = false;
 let openingText;
+const playerMovement = {
+  jumpSpeed: 1500,
+  runSpeed: 350,
+  slowdown: 200,
+  bounce: 0.2,
+};
+const ballMovement = {
+  bounce: 0.5,
+};
 
 function preload() {
   this.load.image('ball', '../assets/images/ball.png');
@@ -52,8 +61,8 @@ function create() {
 
   player1.setCollideWorldBounds(true);
   ball.setCollideWorldBounds(true);
-  ball.setBounce(0.9, 0.9);
-  player1.setImmovable(false);
+  ball.setBounce(0.5, 0.5);
+  player1.setBounce(0.2, 0.2);
   this.physics.add.collider(ball, player1, null, null, this);
 
   openingText = this.add.text(
@@ -71,17 +80,18 @@ function create() {
 }
 
 function update() {
-  player1.body.setVelocityY(0);
-  player1.body.setVelocityX(0);
-
-  if (cursors.up.isDown) {
-    player1.body.setVelocityY(-350);
-  } else if (cursors.down.isDown) {
-    player1.body.setVelocityY(350);
-  } else if (cursors.left.isDown) {
-    player1.body.setVelocityX(-350);
+  if (cursors.left.isDown) {
+    player1.body.setVelocityX(-playerMovement.runSpeed);
   } else if (cursors.right.isDown) {
-    player1.body.setVelocityX(350);
+    player1.body.setVelocityX(playerMovement.runSpeed);
+  } else if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
+    if (player1.body.onFloor()) {
+      player1.body.setVelocityY(playerMovement.jumpSpeed);
+    }
+  } else if (player1.body.velocity.x > 0) {
+    player1.body.velocity.x -= playerMovement.slowdown;
+  } else if (player1.body.velocity.x < 0) {
+    player1.body.velocity.x += playerMovement.slowdown;
   }
 
   if (!gameStarted) {
