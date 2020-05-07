@@ -34,6 +34,7 @@ const playerMovement = {
 };
 const ballMovement = {
   bounce: 0.5,
+  slowdown: 40,
 };
 
 function preload() {
@@ -72,10 +73,11 @@ function create() {
   player1.setFrictionX(0.5);
   ball.setCollideWorldBounds(true);
   ball.setBounce(ballMovement.bounce, ballMovement.bounce);
+  ball.setFrictionX(0.5);
   player1.setBounce(playerMovement.bounce, playerMovement.bounce);
-  this.physics.add.collider(ball, player1, null, null, this);
-  this.physics.add.collider(ball, court, null, null, this);
-  this.physics.add.collider(player1, court, playerCourtCollision, null, this);
+  this.physics.add.collider(ball, player1, ballPlayerCollision);
+  this.physics.add.collider(ball, court, courtBallCollision);
+  this.physics.add.collider(player1, court, playerCourtCollision);
 
   // openingText = this.add.text(
   //   this.physics.world.bounds.width / 2,
@@ -112,6 +114,35 @@ function update() {
   }
 }
 
-function playerCourtCollision(court, player) {
+function playerCourtCollision(player, court) {
+  if (player.body.velocity.x > 0) {
+    player.body.velocity.x = Math.max(
+      player.body.velocity.x - playerMovement.slowdown,
+      0
+    );
+  } else if (player.body.velocity.x < 0) {
+    player.body.velocity.x = Math.min(
+      player.body.velocity.x + playerMovement.slowdown,
+      0
+    );
+  }
+}
+
+function courtBallCollision(court, ball) {
+  // console.log(court, player);
+  if (ball.body.velocity.x > 0) {
+    ball.body.velocity.x = Math.max(
+      ball.body.velocity.x - ballMovement.slowdown,
+      0
+    );
+  } else if (ball.body.velocity.x < 0) {
+    ball.body.velocity.x = Math.min(
+      ball.body.velocity.x + ballMovement.slowdown,
+      0
+    );
+  }
+}
+
+function ballPlayerCollision(ball, player) {
   // console.log(court, player);
 }
