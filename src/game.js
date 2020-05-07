@@ -62,18 +62,20 @@ function create() {
   );
   court.setImmovable(true);
   court.setCollideWorldBounds(true);
+  court.setFrictionX(1);
 
   cursors = this.input.keyboard.createCursorKeys();
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
 
   player1.setCollideWorldBounds(true);
+  player1.setFrictionX(0.5);
   ball.setCollideWorldBounds(true);
   ball.setBounce(ballMovement.bounce, ballMovement.bounce);
   player1.setBounce(playerMovement.bounce, playerMovement.bounce);
   this.physics.add.collider(ball, player1, null, null, this);
   this.physics.add.collider(ball, court, null, null, this);
-  this.physics.add.collider(player1, court, null, null, this);
+  this.physics.add.collider(player1, court, playerCourtCollision, null, this);
 
   // openingText = this.add.text(
   //   this.physics.world.bounds.width / 2,
@@ -107,19 +109,9 @@ function update() {
     if (player1.body.touching.down) {
       player1.body.setVelocityY(playerMovement.jumpSpeed);
     }
-  } else if (player1.body.velocity.x > 0) {
-    player1.body.velocity.x = Math.max(
-      player1.body.velocity.x - playerMovement.slowdown,
-      0
-    );
-  } else if (player1.body.velocity.x < 0) {
-    player1.body.velocity.x = Math.min(
-      player1.body.velocity.x + playerMovement.slowdown,
-      0
-    );
   }
 }
 
-function hitPlayer(ball, player) {
-  // custom logic for changing ball x or y velocity
+function playerCourtCollision(court, player) {
+  // console.log(court, player);
 }
