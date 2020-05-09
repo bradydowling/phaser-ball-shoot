@@ -22,12 +22,12 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-let player, ball, court, cursors;
+let shooter, ball, court, cursors;
 const keys = {};
 let gameStarted = false;
 let openingText;
 const playerMovement = {
-  jumpSpeed: 3000,
+  jumpSpeed: 500,
   runSpeed: 350,
   slowdown: 50,
   bounce: 0.2,
@@ -36,32 +36,44 @@ const ballMovement = {
   bounce: 0.5,
   slowdown: 40,
 };
+let shooterPossession = true;
 
 function preload() {
   this.load.image('ball', '../assets/images/ball.png');
   this.load.image('paddle', '../assets/images/paddle.png');
   this.load.image('court', '../assets/images/court.png');
 }
+function getBallRelativeToShooter(ball, shooter) {
+  return {
+    x: shooter.body.x + shooter.body.width / 2 + ball.body.width / 2 + 1,
+    y: shooter.body.y + ball.body.height / 2,
+  };
+}
 
 function create() {
-  ball = this.physics.add.sprite(
-    this.physics.world.bounds.width / 2, // x position
-    this.physics.world.bounds.height / 10, // y position
-    'ball' // key of image for the sprite
-  );
+  const shooterStart = this.physics.world.bounds.width / 8;
 
-  player1 = this.physics.add.sprite(
-    this.physics.world.bounds.width - (ball.body.width / 2 + 1), // x position
+  shooter = this.physics.add.sprite(
+    shooterStart, // x position
     this.physics.world.bounds.height / 2, // y position
     'paddle' // key of image for the sprite
   );
+
+  ball = this.physics.add.sprite(
+    0, // x position
+    0, // y position
+    'ball' // key of image for the sprite
+  );
+  const ballPos = getBallRelativeToShooter(ball, shooter);
+  ball.body.x = ballPos.x;
+  ball.body.y = ballPos.y;
 
   court = this.physics.add.sprite(
     this.physics.world.bounds.width / 2,
     this.physics.world.bounds.height - 80,
     'court'
   );
-  court.setImmovable(true);
+  court.setImmovable();
   court.setCollideWorldBounds(true);
   court.setFrictionX(1);
 
@@ -69,15 +81,15 @@ function create() {
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
 
-  player1.setCollideWorldBounds(true);
-  player1.setFrictionX(0.5);
+  shooter.setCollideWorldBounds(true);
+  shooter.setFrictionX(0.5);
   ball.setCollideWorldBounds(true);
   ball.setBounce(ballMovement.bounce, ballMovement.bounce);
   ball.setFrictionX(0.5);
-  player1.setBounce(playerMovement.bounce, playerMovement.bounce);
-  this.physics.add.collider(ball, player1, ballPlayerCollision);
+  shooter.setBounce(playerMovement.bounce, playerMovement.bounce);
+  this.physics.add.collider(ball, shooter, ballPlayerCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
-  this.physics.add.collider(player1, court, playerCourtCollision);
+  this.physics.add.collider(shooter, court, playerCourtCollision);
 
   // openingText = this.add.text(
   //   this.physics.world.bounds.width / 2,
@@ -104,13 +116,19 @@ function update() {
   // }
 
   if (cursors.left.isDown) {
-    player1.body.setVelocityX(-playerMovement.runSpeed);
+    shooter.body.setVelocityX(-playerMovement.runSpeed);
   } else if (cursors.right.isDown) {
-    player1.body.setVelocityX(playerMovement.runSpeed);
-  } else if (Phaser.Input.Keyboard.JustDown(cursors.up)) {
-    if (player1.body.touching.down) {
-      player1.body.setVelocityY(playerMovement.jumpSpeed);
-    }
+    shooter.body.setVelocityX(playerMovement.runSpeed);
+  }
+
+  if (cursors.up.isDown && shooter.body.touching.down) {
+    shooter.body.setVelocityY(-playerMovement.jumpSpeed);
+  }
+
+  if (shooterPossession) {
+    const ballPos = getBallRelativeToShooter(ball, shooter);
+    ball.body.x = ballPos.x;
+    ball.body.y = ballPos.y;
   }
 }
 
