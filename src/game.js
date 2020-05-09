@@ -27,7 +27,7 @@ const keys = {};
 let gameStarted = false;
 let openingText;
 const playerMovement = {
-  jumpSpeed: 500,
+  jumpSpeed: 700,
   runSpeed: 350,
   slowdown: 50,
   bounce: 0.2,
@@ -129,9 +129,13 @@ function update() {
   }
 
   if (cursors.up.isDown && shooter.body.touching.down) {
-    shooter.body.setVelocityY(-playerMovement.jumpSpeed);
+    if (shooterPossession) {
+      shooter.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
+    } else {
+      shooter.body.setVelocityY(-playerMovement.jumpSpeed);
+    }
   }
-  if (cursors.space.isDown) {
+  if (cursors.space.isDown && shooterPossession) {
     shooterPossession = false;
     ball.body.setVelocityX(getShotSpeed(shooter).x);
     ball.body.setVelocityY(getShotSpeed(shooter).y);
