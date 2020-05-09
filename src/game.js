@@ -50,6 +50,13 @@ function getBallRelativeToShooter(ball, shooter) {
   };
 }
 
+function getShotSpeed(shooter) {
+  return {
+    x: shooter.body.velocity.x + 300,
+    y: shooter.body.velocity.y - 300,
+  };
+}
+
 function create() {
   const shooterStart = this.physics.world.bounds.width / 8;
 
@@ -123,6 +130,11 @@ function update() {
 
   if (cursors.up.isDown && shooter.body.touching.down) {
     shooter.body.setVelocityY(-playerMovement.jumpSpeed);
+  }
+  if (cursors.space.isDown) {
+    shooterPossession = false;
+    ball.body.setVelocityX(getShotSpeed(shooter).x);
+    ball.body.setVelocityY(getShotSpeed(shooter).y);
   }
 
   if (shooterPossession) {
