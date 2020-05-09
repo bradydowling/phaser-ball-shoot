@@ -46,14 +46,14 @@ function preload() {
 function getBallRelativeToShooter(ball, shooter) {
   return {
     x: shooter.body.x + shooter.body.width / 2 + ball.body.width / 2 + 1,
-    y: shooter.body.y + ball.body.height / 2,
+    y: shooter.body.y,
   };
 }
 
 function getShotSpeed(shooter) {
   return {
-    x: shooter.body.velocity.x + 300,
-    y: shooter.body.velocity.y - 300,
+    x: Math.max(shooter.body.velocity.x, 0) + 400,
+    y: Math.min(shooter.body.velocity.y, 0) - 500,
   };
 }
 
@@ -175,4 +175,5 @@ function courtBallCollision(court, ball) {
 
 function ballPlayerCollision(ball, player) {
   // console.log(court, player);
+  shooterPossession = true;
 }
