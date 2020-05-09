@@ -61,16 +61,12 @@ function create() {
   const shooterStart = this.physics.world.bounds.width / 8;
 
   shooter = this.physics.add.sprite(
-    shooterStart, // x position
-    this.physics.world.bounds.height / 2, // y position
-    'paddle' // key of image for the sprite
+    shooterStart,
+    this.physics.world.bounds.height / 2,
+    'paddle'
   );
 
-  ball = this.physics.add.sprite(
-    0, // x position
-    0, // y position
-    'ball' // key of image for the sprite
-  );
+  ball = this.physics.add.sprite(0, 0, 'ball');
   const ballPos = getBallRelativeToShooter(ball, shooter);
   ball.body.x = ballPos.x;
   ball.body.y = ballPos.y;
@@ -97,31 +93,9 @@ function create() {
   this.physics.add.collider(ball, shooter, ballPlayerCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
   this.physics.add.collider(shooter, court, playerCourtCollision);
-
-  // openingText = this.add.text(
-  //   this.physics.world.bounds.width / 2,
-  //   this.physics.world.bounds.height / 2,
-  //   'Press SPACE to Start',
-  //   {
-  //     fontFamily: 'Monaco, Courier, monospace',
-  //     fontSize: '50px',
-  //     fill: '#fff',
-  //   }
-  // );
-
-  // openingText.setOrigin(0.5);
 }
 
 function update() {
-  // if (!gameStarted) {
-  //   ball.setVisible(false);
-  //   if (cursors.space.isDown) {
-  //     ball.setVisible(true);
-  //     gameStarted = true;
-  //     openingText.setVisible(false);
-  //   }
-  // }
-
   if (cursors.left.isDown) {
     shooter.body.setVelocityX(-playerMovement.runSpeed);
   } else if (cursors.right.isDown) {
