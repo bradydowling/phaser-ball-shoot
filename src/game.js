@@ -19,7 +19,7 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-let shooter, ball, court, cursors;
+let shooter, ball, court, cursors, backboard, frontRim, backRim;
 const keys = {};
 let gameStarted = false;
 let openingText;
@@ -42,6 +42,7 @@ function preload() {
   this.load.image('paddle', '../assets/images/paddle.png');
   this.load.image('court', '../assets/images/court.png');
   this.load.image('backboard', '../assets/images/backboard.png');
+  this.load.image('solid-rim', '../assets/images/front-rim.png');
 }
 function getBallRelativeToShooter(ball, shooter) {
   return {
@@ -89,10 +90,22 @@ function create() {
 
   backboard = this.physics.add.sprite(
     this.physics.world.bounds.width * 0.95,
-    this.physics.world.bounds.height * 0.45,
+    this.physics.world.bounds.height * 0.5,
     'backboard'
   );
   backboard.setImmovable();
+  frontRim = this.physics.add.sprite(
+    this.physics.world.bounds.width * 0.95 - 90,
+    this.physics.world.bounds.height * 0.55,
+    'solid-rim'
+  );
+  frontRim.setImmovable();
+  backRim = this.physics.add.sprite(
+    this.physics.world.bounds.width * 0.95 - 10,
+    this.physics.world.bounds.height * 0.55,
+    'solid-rim'
+  );
+  backRim.setImmovable();
 
   cursors = this.input.keyboard.createCursorKeys();
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -101,7 +114,10 @@ function create() {
   this.physics.add.collider(ball, shooter, ballPlayerCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
   this.physics.add.collider(shooter, court, playerCourtCollision);
-  this.physics.add.collider(ball, backboard, null);
+  this.physics.add.collider(ball, backboard);
+  this.physics.add.collider(ball, frontRim);
+  this.physics.add.collider(ball, backRim);
+  this.physics.add.collider(shooter, backboard);
 }
 
 function update() {
