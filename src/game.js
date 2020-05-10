@@ -14,9 +14,6 @@ const config = {
   },
   physics: {
     default: 'arcade',
-    arcade: {
-      gravity: { y: 1000 },
-    },
   },
 };
 
@@ -31,10 +28,12 @@ const playerMovement = {
   runSpeed: 350,
   slowdown: 50,
   bounce: 0,
+  gravity: 1000,
 };
 const ballMovement = {
   bounce: 0.5,
   slowdown: 40,
+  gravity: 1000,
 };
 let shooterPossession = true;
 
@@ -42,6 +41,7 @@ function preload() {
   this.load.image('ball', '../assets/images/ball.png');
   this.load.image('paddle', '../assets/images/paddle.png');
   this.load.image('court', '../assets/images/court.png');
+  this.load.image('backboard', '../assets/images/backboard.png');
 }
 function getBallRelativeToShooter(ball, shooter) {
   return {
@@ -68,6 +68,7 @@ function create() {
   shooter.setCollideWorldBounds(true);
   shooter.setFrictionX(0.5);
   shooter.setBounce(playerMovement.bounce, playerMovement.bounce);
+  shooter.setGravityY(playerMovement.gravity);
 
   ball = this.physics.add.sprite(0, 0, 'ball');
   const ballPos = getBallRelativeToShooter(ball, shooter);
@@ -76,15 +77,22 @@ function create() {
   ball.setCollideWorldBounds(true);
   ball.setBounce(ballMovement.bounce, ballMovement.bounce);
   ball.setFrictionX(0.5);
+  ball.setGravityY(ballMovement.gravity);
 
   court = this.physics.add.sprite(
     this.physics.world.bounds.width / 2,
-    this.physics.world.bounds.height - 80,
+    this.physics.world.bounds.height - 50,
     'court'
   );
   court.setImmovable();
-  court.setCollideWorldBounds(true);
   court.setFrictionX(1);
+
+  backboard = this.physics.add.sprite(
+    this.physics.world.bounds.width * 0.95,
+    this.physics.world.bounds.height * 0.45,
+    'backboard'
+  );
+  backboard.setImmovable();
 
   cursors = this.input.keyboard.createCursorKeys();
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -93,6 +101,7 @@ function create() {
   this.physics.add.collider(ball, shooter, ballPlayerCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
   this.physics.add.collider(shooter, court, playerCourtCollision);
+  this.physics.add.collider(ball, backboard, null);
 }
 
 function update() {
