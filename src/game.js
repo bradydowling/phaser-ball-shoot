@@ -30,7 +30,7 @@ const playerMovement = {
   jumpSpeed: 700,
   runSpeed: 350,
   slowdown: 50,
-  bounce: 0.2,
+  bounce: 0,
 };
 const ballMovement = {
   bounce: 0.5,
@@ -65,11 +65,17 @@ function create() {
     this.physics.world.bounds.height / 2,
     'paddle'
   );
+  shooter.setCollideWorldBounds(true);
+  shooter.setFrictionX(0.5);
+  shooter.setBounce(playerMovement.bounce, playerMovement.bounce);
 
   ball = this.physics.add.sprite(0, 0, 'ball');
   const ballPos = getBallRelativeToShooter(ball, shooter);
   ball.body.x = ballPos.x;
   ball.body.y = ballPos.y;
+  ball.setCollideWorldBounds(true);
+  ball.setBounce(ballMovement.bounce, ballMovement.bounce);
+  ball.setFrictionX(0.5);
 
   court = this.physics.add.sprite(
     this.physics.world.bounds.width / 2,
@@ -84,18 +90,13 @@ function create() {
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
 
-  shooter.setCollideWorldBounds(true);
-  shooter.setFrictionX(0.5);
-  ball.setCollideWorldBounds(true);
-  ball.setBounce(ballMovement.bounce, ballMovement.bounce);
-  ball.setFrictionX(0.5);
-  shooter.setBounce(playerMovement.bounce, playerMovement.bounce);
   this.physics.add.collider(ball, shooter, ballPlayerCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
   this.physics.add.collider(shooter, court, playerCourtCollision);
 }
 
 function update() {
+  shooter.body.setVelocityX(0);
   if (cursors.left.isDown) {
     shooter.body.setVelocityX(-playerMovement.runSpeed);
   } else if (cursors.right.isDown) {
@@ -122,36 +123,21 @@ function update() {
   }
 }
 
-function playerCourtCollision(player, court) {
-  if (player.body.velocity.x > 0) {
-    player.body.velocity.x = Math.max(
-      player.body.velocity.x - playerMovement.slowdown,
-      0
-    );
-  } else if (player.body.velocity.x < 0) {
-    player.body.velocity.x = Math.min(
-      player.body.velocity.x + playerMovement.slowdown,
-      0
-    );
-  }
-}
+function playerCourtCollision(player, court) {}
 
 function courtBallCollision(court, ball) {
-  // console.log(court, player);
+  // Ball friction on court
   if (ball.body.velocity.x > 0) {
-    ball.body.velocity.x = Math.max(
-      ball.body.velocity.x - ballMovement.slowdown,
-      0
+    ball.body.setVelocityX(
+      Math.max(ball.body.velocity.x - ballMovement.slowdown, 0)
     );
   } else if (ball.body.velocity.x < 0) {
-    ball.body.velocity.x = Math.min(
-      ball.body.velocity.x + ballMovement.slowdown,
-      0
+    ball.body.setVelocityX(
+      Math.min(ball.body.velocity.x + ballMovement.slowdown, 0)
     );
   }
 }
 
 function ballPlayerCollision(ball, player) {
-  // console.log(court, player);
   shooterPossession = true;
 }
