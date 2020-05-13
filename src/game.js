@@ -19,7 +19,7 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-let shooter, ball, court, cursors, backboard, frontRim, backRim;
+let shooter, rebounder, ball, court, cursors, backboard, frontRim, backRim;
 const keys = {};
 let gameStarted = false;
 let openingText;
@@ -28,6 +28,7 @@ const playerMovement = {
   runSpeed: 350,
   slowdown: 50,
   bounce: 0,
+  friction: 0.5,
   gravity: 1000,
 };
 const ballMovement = {
@@ -36,10 +37,11 @@ const ballMovement = {
   gravity: 1000,
 };
 let shooterPossession = true;
+let rebounderPossession = false;
 
 function preload() {
   this.load.image('ball', '../assets/images/ball.png');
-  this.load.image('paddle', '../assets/images/paddle.png');
+  this.load.image('player', '../assets/images/paddle.png');
   this.load.image('court', '../assets/images/court.png');
   this.load.image('backboard', '../assets/images/backboard.png');
   this.load.image('solid-rim', '../assets/images/front-rim.png');
@@ -64,12 +66,22 @@ function create() {
   shooter = this.physics.add.sprite(
     shooterStart,
     this.physics.world.bounds.height / 2,
-    'paddle'
+    'player'
   );
   shooter.setCollideWorldBounds(true);
-  shooter.setFrictionX(0.5);
+  shooter.setFrictionX(playerMovement.friction);
   shooter.setBounce(playerMovement.bounce, playerMovement.bounce);
   shooter.setGravityY(playerMovement.gravity);
+
+  rebounder = this.physics.add.sprite(
+    this.physics.world.bounds.width * 0.75,
+    this.physics.world.bounds.height / 2,
+    'player'
+  );
+  rebounder.setCollideWorldBounds(true);
+  rebounder.setFrictionX(playerMovement.friction);
+  rebounder.setBounce(playerMovement.bounce, playerMovement.bounce);
+  rebounder.setGravityY(playerMovement.gravity);
 
   ball = this.physics.add.sprite(0, 0, 'ball');
   const ballPos = getBallRelativeToShooter(ball, shooter);
@@ -111,13 +123,28 @@ function create() {
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
 
-  this.physics.add.collider(ball, shooter, ballPlayerCollision);
+  this.physics.add.collider(ball, shooter, ballShooterCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
   this.physics.add.collider(shooter, court, playerCourtCollision);
+  this.physics.add.collider(rebounder, court, playerCourtCollision);
+  this.physics.add.collider(ball, rebounder, ballRebounderCollision);
   this.physics.add.collider(ball, backboard);
   this.physics.add.collider(ball, frontRim);
   this.physics.add.collider(ball, backRim);
   this.physics.add.collider(shooter, backboard);
+
+  const line = new Phaser.Geom.Line(
+    this.physics.world.bounds.width / 2,
+    this.physics.world.bounds.height - court.body.height,
+    this.physics.world.bounds.width / 2,
+    0
+  );
+
+  const graphics = this.add.graphics({
+    lineStyle: { width: 2, color: 0xaaaaaa },
+  });
+
+  graphics.strokeLineShape(line);
 }
 
 function update() {
@@ -145,6 +172,10 @@ function update() {
     const ballPos = getBallRelativeToShooter(ball, shooter);
     ball.body.x = ballPos.x;
     ball.body.y = ballPos.y;
+  } else if (rebounderPossession) {
+    const ballPos = getBallRelativeToShooter(ball, rebounder);
+    ball.body.x = ballPos.x;
+    ball.body.y = ballPos.y;
   }
 }
 
@@ -163,6 +194,10 @@ function courtBallCollision(court, ball) {
   }
 }
 
-function ballPlayerCollision(ball, player) {
+function ballShooterCollision(ball, player) {
   shooterPossession = true;
+}
+
+function ballRebounderCollision(ball, player) {
+  rebounderPossession = true;
 }
