@@ -125,16 +125,6 @@ function create() {
   keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
   keys.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
-  this.physics.add.collider(ball, shooter, ballShooterCollision);
-  this.physics.add.collider(ball, court, courtBallCollision);
-  this.physics.add.collider(shooter, court, playerCourtCollision);
-  this.physics.add.collider(rebounder, court, playerCourtCollision);
-  this.physics.add.collider(ball, rebounder, ballRebounderCollision);
-  this.physics.add.collider(ball, backboard);
-  this.physics.add.collider(ball, frontRim);
-  this.physics.add.collider(ball, backRim);
-  this.physics.add.collider(shooter, backboard);
-
   const halfcourt = this.physics.add.staticGroup();
   halfcourt.add(this.add.zone(400, 100, 1, 800));
 
@@ -152,7 +142,6 @@ function create() {
   });
 
   halfcourtGraphics.strokeLineShape(halfcourtLine);
-  this.physics.add.collider(shooter, halfcourtLine);
 
   const rimLine = new Phaser.Geom.Line(
     frontRim.x,
@@ -166,6 +155,18 @@ function create() {
   });
 
   rimGraphics.strokeLineShape(rimLine);
+
+  this.physics.add.collider(ball, shooter, ballShooterCollision);
+  this.physics.add.collider(ball, court, courtBallCollision);
+  this.physics.add.collider(shooter, court, playerCourtCollision);
+  this.physics.add.collider(rebounder, court, playerCourtCollision);
+  this.physics.add.collider(ball, rebounder, ballRebounderCollision);
+  this.physics.add.collider(ball, backboard);
+  this.physics.add.collider(ball, frontRim);
+  this.physics.add.collider(ball, backRim);
+  this.physics.add.collider(shooter, backboard);
+  this.physics.add.collider(shooter, halfcourtLine);
+  this.physics.add.collider(rebounder, halfcourtLine);
 }
 
 function update() {
@@ -197,11 +198,7 @@ function update() {
   }
 
   if (cursors.up.isDown && rebounder.body.touching.down) {
-    if (rebounderPossession) {
-      rebounder.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
-    } else {
-      rebounder.body.setVelocityY(-playerMovement.jumpSpeed);
-    }
+    rebounder.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
   }
   if (cursors.shift.isDown && rebounderPossession) {
     rebounderPossession = false;
