@@ -133,18 +133,24 @@ function create() {
   this.physics.add.collider(ball, backRim);
   this.physics.add.collider(shooter, backboard);
 
+  const halfcourt = this.physics.add.staticGroup();
+  halfcourt.add(this.add.zone(400, 100, 1, 800));
+
+  this.physics.add.collider(shooter, halfcourt);
+
   const halfcourtLine = new Phaser.Geom.Line(
     this.physics.world.bounds.width / 2,
-    this.physics.world.bounds.height - court.body.height,
+    this.physics.world.bounds.height,
     this.physics.world.bounds.width / 2,
-    0
+    this.physics.world.bounds.height - court.body.height
   );
 
   const halfcourtGraphics = this.add.graphics({
-    lineStyle: { width: 2, color: 0xaaaaaa },
+    lineStyle: { width: 2, color: 0xffffff },
   });
 
   halfcourtGraphics.strokeLineShape(halfcourtLine);
+  this.physics.add.collider(shooter, halfcourtLine);
 
   const rimLine = new Phaser.Geom.Line(
     frontRim.x,
