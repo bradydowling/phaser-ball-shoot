@@ -121,7 +121,9 @@ function create() {
 
   cursors = this.input.keyboard.createCursorKeys();
   keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+  keys.a = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+  keys.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
   this.physics.add.collider(ball, shooter, ballShooterCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
@@ -168,13 +170,13 @@ function create() {
 
 function update() {
   shooter.body.setVelocityX(0);
-  if (cursors.left.isDown) {
+  if (keys.a.isDown) {
     shooter.body.setVelocityX(-playerMovement.runSpeed);
-  } else if (cursors.right.isDown) {
+  } else if (keys.d.isDown) {
     shooter.body.setVelocityX(playerMovement.runSpeed);
   }
 
-  if (cursors.up.isDown && shooter.body.touching.down) {
+  if (keys.w.isDown && shooter.body.touching.down) {
     if (shooterPossession) {
       shooter.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
     } else {
@@ -185,6 +187,26 @@ function update() {
     shooterPossession = false;
     ball.body.setVelocityX(getShotSpeed(shooter).x);
     ball.body.setVelocityY(getShotSpeed(shooter).y);
+  }
+
+  rebounder.body.setVelocityX(0);
+  if (cursors.left.isDown) {
+    rebounder.body.setVelocityX(-playerMovement.runSpeed);
+  } else if (cursors.right.isDown) {
+    rebounder.body.setVelocityX(playerMovement.runSpeed);
+  }
+
+  if (cursors.up.isDown && rebounder.body.touching.down) {
+    if (rebounderPossession) {
+      rebounder.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
+    } else {
+      rebounder.body.setVelocityY(-playerMovement.jumpSpeed);
+    }
+  }
+  if (cursors.shift.isDown && rebounderPossession) {
+    rebounderPossession = false;
+    ball.body.setVelocityX(getShotSpeed(rebounder).x);
+    ball.body.setVelocityY(getShotSpeed(rebounder).y);
   }
 
   if (shooterPossession) {
