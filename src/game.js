@@ -25,6 +25,7 @@ let gameStarted = false;
 let openingText;
 const playerMovement = {
   jumpSpeed: 700,
+  ballJumpSpeed: 550,
   runSpeed: 350,
   slowdown: 50,
   bounce: 0,
@@ -35,6 +36,7 @@ const ballMovement = {
   bounce: 0.5,
   slowdown: 40,
   gravity: 1000,
+  dropSpeed: 50,
 };
 let shooterPossession = true;
 let rebounderPossession = false;
@@ -54,9 +56,19 @@ function getBallRelativeToShooter(ball, shooter) {
 }
 
 function getShotSpeed(shooter) {
+  const shotSpeedBaseX = 400;
+  const shotSpeedBaseY = 500;
   return {
-    x: Math.max(shooter.body.velocity.x, 0) + 400,
-    y: Math.min(shooter.body.velocity.y, 0) - 500,
+    x: Math.max(shooter.body.velocity.x, 0) + shotSpeedBaseX,
+    y: Math.min(shooter.body.velocity.y, 0) - shotSpeedBaseY,
+  };
+}
+
+function getDropSpeed(shooter) {
+  const dropSpeedBase = 20;
+  return {
+    x: Math.max(shooter.body.velocity.x, 0) + 2 * dropSpeedBase,
+    y: Math.min(shooter.body.velocity.y, 0) - dropSpeedBase,
   };
 }
 
@@ -166,7 +178,6 @@ function create() {
   this.physics.add.collider(ball, backRim);
   this.physics.add.collider(shooter, backboard);
   this.physics.add.collider(shooter, halfcourtLine);
-  this.physics.add.collider(rebounder, halfcourtLine);
 }
 
 function update() {
@@ -179,10 +190,14 @@ function update() {
 
   if (keys.w.isDown && shooter.body.touching.down) {
     if (shooterPossession) {
-      shooter.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
+      shooter.body.setVelocityY(-playerMovement.ballJumpSpeed);
     } else {
       shooter.body.setVelocityY(-playerMovement.jumpSpeed);
     }
+  } else if (keys.s.isDown && shooterPossession) {
+    shooterPossession = false;
+    ball.body.setVelocityX(getDropSpeed(shooter).x);
+    ball.body.setVelocityY(getDropSpeed(shooter).y);
   }
   if (cursors.space.isDown && shooterPossession) {
     shooterPossession = false;
@@ -198,7 +213,11 @@ function update() {
   }
 
   if (cursors.up.isDown && rebounder.body.touching.down) {
-    rebounder.body.setVelocityY(-(playerMovement.jumpSpeed - 150));
+    rebounder.body.setVelocityY(-playerMovement.ballJumpSpeed);
+  } else if (cursors.down.isDown && rebounderPossession) {
+    rebounderPossession = false;
+    ball.body.setVelocityX(getDropSpeed(rebounder).x);
+    ball.body.setVelocityY(getDropSpeed(rebounder).y);
   }
   if (cursors.shift.isDown && rebounderPossession) {
     rebounderPossession = false;
