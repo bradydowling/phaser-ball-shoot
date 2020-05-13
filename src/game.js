@@ -40,6 +40,7 @@ const ballMovement = {
 };
 let shooterPossession = true;
 let rebounderPossession = false;
+let lastPossession;
 
 function preload() {
   this.load.image('ball', '../assets/images/ball.png');
@@ -254,10 +255,12 @@ function courtBallCollision(court, ball) {
 
 function ballShooterCollision(ball, player) {
   shooterPossession = true;
+  lastPossession = 'shooter';
   rebounderPossession = false;
 }
 
 function ballRebounderCollision(ball, player) {
   rebounderPossession = true;
+  lastPossession = 'rebounder';
   shooterPossession = false;
 }
