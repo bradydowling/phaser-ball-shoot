@@ -174,6 +174,7 @@ function create() {
   this.physics.add.collider(rebounder, court, playerCourtCollision);
   this.physics.add.collider(ball, rebounder, ballRebounderCollision);
   this.physics.add.collider(ball, backboard);
+  this.physics.add.collider(rebounder, frontRim);
   this.physics.add.collider(ball, frontRim);
   this.physics.add.collider(ball, backRim);
   this.physics.add.collider(shooter, backboard);
