@@ -133,18 +133,31 @@ function create() {
   this.physics.add.collider(ball, backRim);
   this.physics.add.collider(shooter, backboard);
 
-  const line = new Phaser.Geom.Line(
+  const halfcourtLine = new Phaser.Geom.Line(
     this.physics.world.bounds.width / 2,
     this.physics.world.bounds.height - court.body.height,
     this.physics.world.bounds.width / 2,
     0
   );
 
-  const graphics = this.add.graphics({
+  const halfcourtGraphics = this.add.graphics({
     lineStyle: { width: 2, color: 0xaaaaaa },
   });
 
-  graphics.strokeLineShape(line);
+  halfcourtGraphics.strokeLineShape(halfcourtLine);
+
+  const rimLine = new Phaser.Geom.Line(
+    frontRim.x,
+    frontRim.y,
+    backRim.x,
+    backRim.y
+  );
+
+  const rimGraphics = this.add.graphics({
+    lineStyle: { width: frontRim.body.height, color: 0xf3af3d },
+  });
+
+  rimGraphics.strokeLineShape(rimLine);
 }
 
 function update() {
@@ -196,8 +209,10 @@ function courtBallCollision(court, ball) {
 
 function ballShooterCollision(ball, player) {
   shooterPossession = true;
+  rebounderPossession = false;
 }
 
 function ballRebounderCollision(ball, player) {
   rebounderPossession = true;
+  shooterPossession = false;
 }
