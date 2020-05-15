@@ -3,3 +3,6 @@ node_modules
 web_modules
 .eslintcache
 build.zip
+dist/*.png
+dist/*.js
+dist/*.map
