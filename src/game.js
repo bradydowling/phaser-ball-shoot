@@ -160,8 +160,6 @@ function create() {
   const halfcourt = this.physics.add.staticGroup();
   halfcourt.add(this.add.zone(400, 100, 1, 800));
 
-  this.physics.add.collider(shooter, halfcourt);
-
   const halfcourtLine = new Phaser.Geom.Line(
     this.physics.world.bounds.width / 2,
     this.physics.world.bounds.height,
@@ -216,7 +214,7 @@ function create() {
   this.physics.add.collider(ball, frontRim);
   this.physics.add.collider(ball, backRim);
   this.physics.add.collider(shooter, backboard);
-  this.physics.add.collider(shooter, halfcourtLine);
+  // this.physics.add.collider(shooter, halfcourt);
 }
 
 function getScorer() {
