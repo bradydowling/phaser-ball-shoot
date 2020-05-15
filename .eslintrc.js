@@ -13,7 +13,7 @@ module.exports = {
       'plugin:prettier/recommended'
     ],
     plugins: [],
-    ignorePatterns: ['phaser.js', 'node_modules/'],
+    ignorePatterns: ['node_modules/'],
     // add your custom rules here
     rules: {}
   }
