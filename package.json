@@ -33,6 +33,7 @@
     "lint": "eslint './src/**/*.{js,jsx}'",
     "lint:fix": "eslint './src/**/*.{js,jsx}' --fix",
     "start": "live-server dist",
+    "package": "zip -r build.zip dist",
     "publish:itch": "butler push build.zip readwriteexercise/tip-dunk-shootout:html5"
   },
   "husky": {

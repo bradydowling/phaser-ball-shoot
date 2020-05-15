@@ -10,7 +10,6 @@ const config = {
   width: 800,
   height: 640,
   scale: {
-    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   scene: {
@@ -192,7 +191,7 @@ function create() {
 
   rimGraphics.strokeLineShape(rimLine);
 
-  scoreHeadingText = this.add.text(20, -80, 'Score', {
+  this.add.text(20, -80, 'Score', {
     fontFamily: 'Monaco, Courier, monospace',
     fontSize: '20px',
     fill: '#fff',
