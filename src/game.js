@@ -19,10 +19,7 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-let shooter, rebounder, ball, court, cursors, backboard, frontRim, backRim;
 const keys = {};
-let gameStarted = false;
-let openingText;
 const playerMovement = {
   jumpSpeed: 700,
   ballJumpSpeed: 550,
@@ -32,15 +29,30 @@ const playerMovement = {
   friction: 0.5,
   gravity: 1000,
 };
+
 const ballMovement = {
   bounce: 0.5,
   slowdown: 40,
   gravity: 1000,
   dropSpeed: 50,
 };
-let shooterPossession = true;
-let rebounderPossession = false;
-let lastPossession;
+const PLAYERS = {
+  SHOOTER: 'shooter',
+  REBOUNDER: 'rebounder',
+};
+
+let shooter, rebounder, ball, court, cursors, backboard, frontRim, backRim;
+let player1ScoreText, player2ScoreText;
+
+const gameState = {
+  gameStarted: false,
+  shooterPossession: true,
+  rebounderPossession: false,
+  lastPossession: null,
+  shooterPlayerNum: 0,
+  score: [0, 0],
+  justScored: false,
+};
 
 function preload() {
   this.load.image('ball', '../assets/images/ball.png');
@@ -71,6 +83,13 @@ function getDropSpeed(shooter) {
     x: Math.max(shooter.body.velocity.x, 0) + 2 * dropSpeedBase,
     y: Math.min(shooter.body.velocity.y, 0) - dropSpeedBase,
   };
+}
+
+function getPlayerScoreText(playerNum) {
+  if (playerNum < 0 || playerNum > 1) {
+    return 'Player score: 💔';
+  }
+  return `Player ${playerNum + 1}: ${gameState.score[playerNum]}`;
 }
 
 function create() {
@@ -169,6 +188,24 @@ function create() {
 
   rimGraphics.strokeLineShape(rimLine);
 
+  scoreHeadingText = this.add.text(20, -80, 'Score', {
+    fontFamily: 'Monaco, Courier, monospace',
+    fontSize: '20px',
+    fill: '#fff',
+  });
+
+  player1ScoreText = this.add.text(20, -50, 'Player 1: 0', {
+    fontFamily: 'Monaco, Courier, monospace',
+    fontSize: '20px',
+    fill: '#fff',
+  });
+
+  player2ScoreText = this.add.text(20, -20, 'Player 2: 0', {
+    fontFamily: 'Monaco, Courier, monospace',
+    fontSize: '20px',
+    fill: '#fff',
+  });
+
   this.physics.add.collider(ball, shooter, ballShooterCollision);
   this.physics.add.collider(ball, court, courtBallCollision);
   this.physics.add.collider(shooter, court, playerCourtCollision);
@@ -182,6 +219,36 @@ function create() {
   this.physics.add.collider(shooter, halfcourtLine);
 }
 
+function getScorer() {
+  const pointScored =
+    ball.body.velocity.y > 0 &&
+    ball.body.x > frontRim.body.x &&
+    ball.body.x < backRim.body.x &&
+    ball.body.y > frontRim.body.y &&
+    ball.body.y < frontRim.body.y + frontRim.body.height / 2 &&
+    !gameState.shooterPossession &&
+    !gameState.rebounderPossession;
+  if (!pointScored) {
+    return;
+  }
+
+  gameState.justScored = true;
+  setTimeout(() => {
+    gameState.justScored = false;
+  }, 500);
+
+  if (
+    (gameState.lastPossession === PLAYERS.SHOOTER &&
+      gameState.shooterPlayerNum === 0) ||
+    (gameState.lastPossession !== PLAYERS.SHOOTER &&
+      gameState.shooterPlayerNum !== 0)
+  ) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
 function update() {
   shooter.body.setVelocityX(0);
   if (keys.a.isDown) {
@@ -190,19 +257,30 @@ function update() {
     shooter.body.setVelocityX(playerMovement.runSpeed);
   }
 
+  if (!gameState.justScored) {
+    const scorer = getScorer();
+    if (scorer === 0) {
+      gameState.score[0] = gameState.score[0] + 1;
+      player1ScoreText.text = getPlayerScoreText(0);
+    } else if (scorer === 1) {
+      gameState.score[1] = gameState.score[1] + 1;
+      player2ScoreText.text = getPlayerScoreText(1);
+    }
+  }
+
   if (keys.w.isDown && shooter.body.touching.down) {
-    if (shooterPossession) {
+    if (gameState.shooterPossession) {
       shooter.body.setVelocityY(-playerMovement.ballJumpSpeed);
     } else {
       shooter.body.setVelocityY(-playerMovement.jumpSpeed);
     }
-  } else if (keys.s.isDown && shooterPossession) {
-    shooterPossession = false;
+  } else if (keys.s.isDown && gameState.shooterPossession) {
+    gameState.shooterPossession = false;
     ball.body.setVelocityX(getDropSpeed(shooter).x);
     ball.body.setVelocityY(getDropSpeed(shooter).y);
   }
-  if (cursors.space.isDown && shooterPossession) {
-    shooterPossession = false;
+  if (cursors.space.isDown && gameState.shooterPossession) {
+    gameState.shooterPossession = false;
     ball.body.setVelocityX(getShotSpeed(shooter).x);
     ball.body.setVelocityY(getShotSpeed(shooter).y);
   }
@@ -216,22 +294,22 @@ function update() {
 
   if (cursors.up.isDown && rebounder.body.touching.down) {
     rebounder.body.setVelocityY(-playerMovement.ballJumpSpeed);
-  } else if (cursors.down.isDown && rebounderPossession) {
-    rebounderPossession = false;
+  } else if (cursors.down.isDown && gameState.rebounderPossession) {
+    gameState.rebounderPossession = false;
     ball.body.setVelocityX(getDropSpeed(rebounder).x);
     ball.body.setVelocityY(getDropSpeed(rebounder).y);
   }
-  if (cursors.shift.isDown && rebounderPossession) {
-    rebounderPossession = false;
+  if (cursors.shift.isDown && gameState.rebounderPossession) {
+    gameState.rebounderPossession = false;
     ball.body.setVelocityX(getShotSpeed(rebounder).x);
     ball.body.setVelocityY(getShotSpeed(rebounder).y);
   }
 
-  if (shooterPossession) {
+  if (gameState.shooterPossession) {
     const ballPos = getBallRelativeToShooter(ball, shooter);
     ball.body.x = ballPos.x;
     ball.body.y = ballPos.y;
-  } else if (rebounderPossession) {
+  } else if (gameState.rebounderPossession) {
     const ballPos = getBallRelativeToShooter(ball, rebounder);
     ball.body.x = ballPos.x;
     ball.body.y = ballPos.y;
@@ -254,13 +332,13 @@ function courtBallCollision(court, ball) {
 }
 
 function ballShooterCollision(ball, player) {
-  shooterPossession = true;
-  lastPossession = 'shooter';
-  rebounderPossession = false;
+  gameState.shooterPossession = true;
+  gameState.lastPossession = PLAYERS.SHOOTER;
+  gameState.rebounderPossession = false;
 }
 
 function ballRebounderCollision(ball, player) {
-  rebounderPossession = true;
-  lastPossession = 'rebounder';
-  shooterPossession = false;
+  gameState.rebounderPossession = true;
+  gameState.lastPossession = PLAYERS.REBOUNDER;
+  gameState.shooterPossession = false;
 }
