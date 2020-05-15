@@ -19,7 +19,8 @@
   "scripts": {
     "lint": "eslint './src/**/*.{js,jsx}'",
     "lint:fix": "eslint './src/**/*.{js,jsx}' --fix",
-    "start": "live-server"
+    "start": "live-server",
+    "publish:itch": "butler push ./ readwriteexercise/tip-dunk-shootout:html5 --ignore node_modules --ignore '.*' --ignore 'package*' --ignore '*.md'"
   },
   "husky": {
     "hooks": {
