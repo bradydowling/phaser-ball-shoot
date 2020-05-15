@@ -17,10 +17,11 @@
     "prettier": "^2.0.5"
   },
   "scripts": {
+    "build": "zip -r build.zip index.html assets lib src",
     "lint": "eslint './src/**/*.{js,jsx}'",
     "lint:fix": "eslint './src/**/*.{js,jsx}' --fix",
     "start": "live-server",
-    "publish:itch": "butler push ./ readwriteexercise/tip-dunk-shootout:html5 --ignore node_modules --ignore '.*' --ignore 'package*' --ignore '*.md'"
+    "publish:itch": "butler push build.zip readwriteexercise/tip-dunk-shootout:html5"
   },
   "husky": {
     "hooks": {

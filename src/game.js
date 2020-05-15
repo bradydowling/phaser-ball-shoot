@@ -55,11 +55,11 @@ const gameState = {
 };
 
 function preload() {
-  this.load.image('ball', '../assets/images/ball.png');
-  this.load.image('player', '../assets/images/paddle.png');
-  this.load.image('court', '../assets/images/court.png');
-  this.load.image('backboard', '../assets/images/backboard.png');
-  this.load.image('solid-rim', '../assets/images/front-rim.png');
+  this.load.image('ball', '../assets/ball.png');
+  this.load.image('player', '../assets/paddle.png');
+  this.load.image('court', '../assets/court.png');
+  this.load.image('backboard', '../assets/backboard.png');
+  this.load.image('solid-rim', '../assets/front-rim.png');
 }
 function getBallRelativeToShooter(ball, shooter) {
   return {
