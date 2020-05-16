@@ -311,14 +311,24 @@ export default class Play extends Phaser.Scene {
   }
 
   getScorer() {
-    const pointScored =
-      this.ball.body.velocity.y > 0 &&
+    const noOneHasPossession =
+      !this.gameState.player1Possession && !this.gameState.player2Possession;
+    const isBallInTheCylinder =
       this.ball.body.x > this.frontRim.body.x &&
-      this.ball.body.x < this.backRim.body.x &&
-      this.ball.body.y > this.frontRim.body.y &&
-      this.ball.body.y < this.frontRim.body.y + this.frontRim.body.height / 2 &&
-      !this.gameState.player1Possession &&
-      !this.gameState.player2Possession;
+      this.ball.body.x < this.backRim.body.x;
+    const isBelowTheRim = this.ball.body.y > this.frontRim.body.y;
+    const isGoingDown = this.ball.body.velocity.y > 0;
+    const isAboveBackboardBottom =
+      this.ball.body.y <
+      this.backRim.body.y + this.backRim.body.height + this.ball.body.height;
+
+    const pointScored =
+      isBallInTheCylinder &&
+      noOneHasPossession &&
+      isBelowTheRim &&
+      isGoingDown &&
+      isAboveBackboardBottom;
+
     if (!pointScored) {
       return;
     }
@@ -328,12 +338,7 @@ export default class Play extends Phaser.Scene {
       this.gameState.justScored = false;
     }, 500);
 
-    if (
-      (this.gameState.lastPossession === this.PLAYERS.PLAYER1 &&
-        this.gameState.shooterPlayerNum === 0) ||
-      (this.gameState.lastPossession !== this.PLAYERS.PLAYER1 &&
-        this.gameState.shooterPlayerNum !== 0)
-    ) {
+    if (this.gameState.lastPossession === this.PLAYERS.PLAYER1) {
       return 0;
     } else {
       return 1;
