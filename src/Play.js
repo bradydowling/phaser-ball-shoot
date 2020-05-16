@@ -161,19 +161,19 @@ export default class Play extends Phaser.Scene {
 
     rimGraphics.strokeLineShape(rimLine);
 
-    this.add.text(20, -80, 'Score', {
+    this.add.text(20, -100, 'Score', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.player1ScoreText = this.add.text(20, -50, 'Player 1: 0', {
+    this.player1ScoreText = this.add.text(20, -70, 'Player 1: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.player2ScoreText = this.add.text(20, -20, 'Player 2: 0', {
+    this.player2ScoreText = this.add.text(20, -40, 'Player 2: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
