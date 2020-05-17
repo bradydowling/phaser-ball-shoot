@@ -14,11 +14,26 @@ export default class Play extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.ENTER
     );
 
-    this.add.text(230, 170, 'Press ENTER to start gameplay', {
+    const middleX = this.physics.world.bounds.width / 2;
+    const titleText = this.add.text(middleX, 0, 'Tip Dunk Shootout', {
       fontFamily: 'Monaco, Courier, monospace',
-      fontSize: '20px',
+      fontSize: '40px',
       fill: '#fff',
     });
+    titleText.setOrigin(0.5);
+
+    const middleY = this.physics.world.bounds.height / 2;
+    const welcomeText = this.add.text(
+      middleX,
+      middleY,
+      'Press ENTER to start gameplay',
+      {
+        fontFamily: 'Monaco, Courier, monospace',
+        fontSize: '20px',
+        fill: '#fff',
+      }
+    );
+    welcomeText.setOrigin(0.5);
   }
 
   update() {
