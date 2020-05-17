@@ -49,6 +49,8 @@ export default class Play extends Phaser.Scene {
       shooterPlayerNum: 0,
       score: [0, 0],
       justScored: false,
+      wasAboveRim: false,
+      wasAboveRimTimeout: null,
     };
   }
 
@@ -125,12 +127,13 @@ export default class Play extends Phaser.Scene {
     );
     this.backRim.setImmovable();
 
-    const cursors = this.input.keyboard.createCursorKeys();
-    this.keys = { ...cursors };
-    this.keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-    this.keys.a = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-    this.keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-    this.keys.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    this.keys = {
+      ...this.input.keyboard.createCursorKeys(),
+      w: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      a: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      s: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+      d: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    };
 
     const halfcourt = this.physics.add.staticGroup();
     halfcourt.add(this.add.zone(400, 100, 1, 800));
@@ -311,12 +314,26 @@ export default class Play extends Phaser.Scene {
   }
 
   getScorer() {
+    const isAboveTheRim = this.ball.body.y < this.frontRim.body.y;
+    if (isAboveTheRim) {
+      this.wasAboveRim = true;
+
+      if (this.wasAboveRimTimeout) {
+        clearTimeout(this.wasAboveRimTimeout);
+      }
+
+      this.wasAboveRimTimeout = setTimeout(() => {
+        this.wasAboveRim = false;
+      }, 200);
+
+      return;
+    }
+
     const noOneHasPossession =
       !this.gameState.player1Possession && !this.gameState.player2Possession;
     const isBallInTheCylinder =
       this.ball.body.x > this.frontRim.body.x &&
       this.ball.body.x < this.backRim.body.x;
-    const isBelowTheRim = this.ball.body.y > this.frontRim.body.y;
     const isGoingDown = this.ball.body.velocity.y > 0;
     const isAboveBackboardBottom =
       this.ball.body.y <
@@ -325,8 +342,8 @@ export default class Play extends Phaser.Scene {
     const pointScored =
       isBallInTheCylinder &&
       noOneHasPossession &&
-      isBelowTheRim &&
       isGoingDown &&
+      this.wasAboveRim &&
       isAboveBackboardBottom;
 
     if (!pointScored) {
@@ -345,7 +362,11 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  playerCourtCollision(player, court) {}
+  playerCourtCollision(player, court) {
+    if (player.body.y > this.court.body.y - player.body.height / 2) {
+      player.body.y = this.court.body.y - player.body.height;
+    }
+  }
 
   courtBallCollision(court, ball) {
     // Ball friction on court
