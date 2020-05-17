@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import Play from './Play';
+import Intro from './Intro';
+import Gameplay from './Gameplay';
 
 const config = {
   type: Phaser.AUTO,
@@ -8,7 +9,7 @@ const config = {
   scale: {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: Play,
+  scene: [Intro, Gameplay],
   physics: {
     default: 'arcade',
   },

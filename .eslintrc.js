@@ -13,7 +13,6 @@ module.exports = {
       'plugin:prettier/recommended'
     ],
     plugins: [],
-    ignorePatterns: ['node_modules/'],
-    // add your custom rules here
+    ignorePatterns: ['node_modules/*', 'dist/*'],
     rules: {}
   }

@@ -7,7 +7,7 @@ import rimImg from './assets/front-rim.png';
 
 export default class Play extends Phaser.Scene {
   constructor() {
-    super('play');
+    super('gameplay');
 
     this.keys = {};
     this.playerMovement = {
