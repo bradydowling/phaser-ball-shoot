@@ -176,6 +176,13 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
+    this.brokenAnkleText = this.add.text(500, 0, 'Broke ya ankles!!!', {
+      fontFamily: 'Monaco, Courier, monospace',
+      fontSize: '20px',
+      fill: '#fff',
+    });
+    this.brokenAnkleText.setVisible(false);
+
     this.player2ScoreText = this.add.text(20, -40, 'Player 2: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
@@ -365,6 +372,10 @@ export default class Play extends Phaser.Scene {
   playerCourtCollision(player, court) {
     if (player.body.y > this.court.body.y - player.body.height / 2) {
       player.body.y = this.court.body.y - player.body.height;
+      this.brokenAnkleText.setVisible(true);
+      setTimeout(() => {
+        this.brokenAnkleText.setVisible(false);
+      }, 1500);
     }
   }
 
