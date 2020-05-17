@@ -40,17 +40,19 @@ export default class Play extends Phaser.Scene {
     this.backRim;
     this.player1ScoreText;
     this.player2ScoreText;
+    this.shootingSpots = [0, 0, 0];
 
     this.gameState = {
       gameStarted: false,
       player1Possession: true,
       player2Possession: false,
       lastPossession: null,
-      shooterPlayerNum: 0,
       score: [0, 0],
       justScored: false,
       wasAboveRim: false,
       wasAboveRimTimeout: null,
+      shootingSpotNum: 0,
+      shotNum: 0,
     };
   }
 
@@ -63,10 +65,13 @@ export default class Play extends Phaser.Scene {
   }
 
   create() {
-    const player1Start = this.physics.world.bounds.width / 8;
+    const shootingSpotBase = this.physics.world.bounds.width / 8;
+    this.shootingSpots = this.shootingSpots.map((spot, i, spots) => {
+      return shootingSpotBase * (spots.length - i);
+    });
 
     this.player1 = this.physics.add.sprite(
-      player1Start,
+      this.shootingSpots[0],
       this.physics.world.bounds.height / 2,
       'player'
     );
@@ -77,9 +82,11 @@ export default class Play extends Phaser.Scene {
       this.playerMovement.bounce
     );
     this.player1.setGravityY(this.playerMovement.gravity);
+    this.player1.isShooter = true;
 
+    this.rebounderPosition = this.physics.world.bounds.width * 0.75;
     this.player2 = this.physics.add.sprite(
-      this.physics.world.bounds.width * 0.75,
+      this.rebounderPosition,
       this.physics.world.bounds.height / 2,
       'player'
     );
@@ -223,13 +230,6 @@ export default class Play extends Phaser.Scene {
   }
 
   update() {
-    this.player1.body.setVelocityX(0);
-    if (this.keys.a.isDown) {
-      this.player1.body.setVelocityX(-this.playerMovement.runSpeed);
-    } else if (this.keys.d.isDown) {
-      this.player1.body.setVelocityX(this.playerMovement.runSpeed);
-    }
-
     if (!this.gameState.justScored) {
       const scorer = this.getScorer();
       if (scorer === 0) {
@@ -239,6 +239,13 @@ export default class Play extends Phaser.Scene {
         this.gameState.score[1] = this.gameState.score[1] + 1;
         this.player2ScoreText.text = this.getPlayerScoreText(1);
       }
+    }
+
+    this.player1.body.setVelocityX(0);
+    if (this.keys.a.isDown && !this.player1.isShooter) {
+      this.player1.body.setVelocityX(-this.playerMovement.runSpeed);
+    } else if (this.keys.d.isDown && !this.player1.isShooter) {
+      this.player1.body.setVelocityX(this.playerMovement.runSpeed);
     }
 
     if (this.keys.w.isDown && this.player1.body.touching.down) {
@@ -256,12 +263,33 @@ export default class Play extends Phaser.Scene {
       this.gameState.player1Possession = false;
       this.ball.body.setVelocityX(this.getShotSpeed(this.player1).x);
       this.ball.body.setVelocityY(this.getShotSpeed(this.player1).y);
+
+      if (this.player1.isShooter) {
+        // Each of these cases should set a 1 or 2 second timeout and then reset ball location or show final score/money ball status
+        if (this.gameState.shotNum < 2) {
+          // Next shot
+          this.gameState.shotNum = this.gameState.shotNum + 1;
+        } else if (this.gameState.shootingSpotNum < 2) {
+          // Next rack
+          this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
+          this.gameState.shotNum = 0;
+        } else if (this.player1.isShooter) {
+          // Next shooter
+          this.player1.isShooter = false;
+          this.player2.isShooter = true;
+          this.gameState.shootingSpotNum = 0;
+          this.gameState.shotNum = 0;
+        }
+        setTimeout(() => {
+          this.endShot();
+        }, 2500);
+      }
     }
 
     this.player2.body.setVelocityX(0);
-    if (this.keys.left.isDown) {
+    if (this.keys.left.isDown && !this.player2.isShooter) {
       this.player2.body.setVelocityX(-this.playerMovement.runSpeed);
-    } else if (this.keys.right.isDown) {
+    } else if (this.keys.right.isDown && !this.player2.isShooter) {
       this.player2.body.setVelocityX(this.playerMovement.runSpeed);
     }
 
@@ -276,6 +304,23 @@ export default class Play extends Phaser.Scene {
       this.gameState.player2Possession = false;
       this.ball.body.setVelocityX(this.getShotSpeed(this.player2).x);
       this.ball.body.setVelocityY(this.getShotSpeed(this.player2).y);
+
+      if (this.player2.isShooter) {
+        if (this.gameState.shotNum < 2) {
+          // Next shot
+          this.gameState.shotNum = this.gameState.shotNum + 1;
+        } else if (this.gameState.shootingSpotNum < 2) {
+          // Next rack
+          this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
+          this.gameState.shotNum = 0;
+        } else {
+          // Player 2 shoots second so game over (TODO: Needs to account for overtime)
+          this.gameState.shotNum = 0;
+        }
+        setTimeout(() => {
+          this.endShot();
+        }, 2000);
+      }
     }
 
     if (this.gameState.player1Possession) {
@@ -286,6 +331,22 @@ export default class Play extends Phaser.Scene {
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player2);
       this.ball.body.x = ballPos.x;
       this.ball.body.y = ballPos.y;
+    }
+  }
+
+  endShot() {
+    this.gameState.player1Possession = false;
+    this.gameState.player2Possession = false;
+
+    if (this.player1.isShooter) {
+      this.gameState.player1Possession = true;
+      this.player1.body.x = this.shootingSpots[this.gameState.shootingSpotNum];
+      this.player2.body.x = this.rebounderPosition;
+    }
+    if (this.player2.isShooter) {
+      this.gameState.player2Possession = true;
+      this.player2.body.x = this.shootingSpots[this.gameState.shootingSpotNum];
+      this.player1.body.x = this.rebounderPosition;
     }
   }
 
