@@ -83,6 +83,7 @@ export default class Play extends Phaser.Scene {
     );
     this.player1.setGravityY(this.playerMovement.gravity);
     this.player1.isShooter = true;
+    this.player1.playerNum = 1;
 
     this.rebounderPosition = this.physics.world.bounds.width * 0.75;
     this.player2 = this.physics.add.sprite(
@@ -97,6 +98,7 @@ export default class Play extends Phaser.Scene {
       this.playerMovement.bounce
     );
     this.player2.setGravityY(this.playerMovement.gravity);
+    this.player2.playerNum = 2;
 
     this.ball = this.physics.add.sprite(0, 0, 'ball');
     const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
@@ -177,7 +179,7 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
-    this.player1ScoreText = this.add.text(20, -70, 'Player 1: 0', {
+    this.player1ScoreText = this.add.text(20, -70, 'Player 1: 0 🏀', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
@@ -237,10 +239,10 @@ export default class Play extends Phaser.Scene {
       const scorer = this.getScorer();
       if (scorer === 0) {
         this.gameState.score[0] = this.gameState.score[0] + 1;
-        this.player1ScoreText.text = this.getPlayerScoreText(0);
+        this.player1ScoreText.text = this.getPlayerScoreText(this.player1);
       } else if (scorer === 1) {
         this.gameState.score[1] = this.gameState.score[1] + 1;
-        this.player2ScoreText.text = this.getPlayerScoreText(1);
+        this.player2ScoreText.text = this.getPlayerScoreText(this.player2);
       }
     }
 
@@ -355,7 +357,7 @@ export default class Play extends Phaser.Scene {
 
   getBallRelativeToShooter(ball, player) {
     return {
-      x: player.x + player.body.width / 2 + 2,
+      x: player.x + player.body.width / 2 + 5,
       y: player.y - player.body.height / 2,
     };
   }
@@ -377,11 +379,11 @@ export default class Play extends Phaser.Scene {
     };
   }
 
-  getPlayerScoreText(playerNum) {
-    if (playerNum < 0 || playerNum > 1) {
-      return 'Player score: 💔';
-    }
-    return `Player ${playerNum + 1}: ${this.gameState.score[playerNum]}`;
+  getPlayerScoreText(player) {
+    const possessionSymbol = player.isShooter ? '🏀' : '';
+    return `Player ${player.playerNum + 1}: ${
+      this.gameState.score[playerNum]
+    } ${possessionSymbol}`;
   }
 
   getScorer() {
