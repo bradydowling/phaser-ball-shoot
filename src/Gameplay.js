@@ -343,20 +343,20 @@ export default class Play extends Phaser.Scene {
 
     if (this.player1.isShooter) {
       this.givePlayer1Possession();
-      this.player1.body.x = this.shootingSpots[this.gameState.shootingSpotNum];
-      this.player2.body.x = this.rebounderPosition;
+      this.player1.x = this.shootingSpots[this.gameState.shootingSpotNum];
+      this.player2.x = this.rebounderPosition;
     }
     if (this.player2.isShooter) {
       this.givePlayer2Possession();
-      this.player2.body.x = this.shootingSpots[this.gameState.shootingSpotNum];
-      this.player1.body.x = this.rebounderPosition;
+      this.player2.x = this.shootingSpots[this.gameState.shootingSpotNum];
+      this.player1.x = this.rebounderPosition;
     }
   }
 
   getBallRelativeToShooter(ball, player) {
     return {
-      x: player.body.x + player.body.width / 2 + this.ball.body.width / 2 + 1,
-      y: player.body.y,
+      x: player.x + player.body.width / 2 + this.ball.body.width / 2 + 1,
+      y: player.y,
     };
   }
 
