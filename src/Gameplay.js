@@ -199,7 +199,7 @@ export default class Play extends Phaser.Scene {
     this.physics.add.collider(
       this.ball,
       this.player1,
-      this.ballPlayer1Collision.bind(this)
+      this.givePlayer1Possession.bind(this)
     );
     this.physics.add.collider(
       this.ball,
@@ -219,7 +219,7 @@ export default class Play extends Phaser.Scene {
     this.physics.add.collider(
       this.ball,
       this.player2,
-      this.ballPlayer2Collision.bind(this)
+      this.givePlayer2Possession.bind(this)
     );
     this.physics.add.collider(this.ball, this.backboard);
     this.physics.add.collider(this.player2, this.frontRim);
@@ -227,6 +227,9 @@ export default class Play extends Phaser.Scene {
     this.physics.add.collider(this.ball, this.backRim);
     this.physics.add.collider(this.player1, this.backboard);
     // this.physics.add.collider(this.player1, this.halfcourt);
+
+    // First shooter is player1
+    this.givePlayer1Possession();
   }
 
   update() {
@@ -339,12 +342,12 @@ export default class Play extends Phaser.Scene {
     this.gameState.player2Possession = false;
 
     if (this.player1.isShooter) {
-      this.gameState.player1Possession = true;
+      this.givePlayer1Possession();
       this.player1.body.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player2.body.x = this.rebounderPosition;
     }
     if (this.player2.isShooter) {
-      this.gameState.player2Possession = true;
+      this.givePlayer2Possession();
       this.player2.body.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player1.body.x = this.rebounderPosition;
     }
@@ -453,13 +456,13 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  ballPlayer1Collision(ball, player) {
+  givePlayer1Possession(ball, player) {
     this.gameState.player1Possession = true;
     this.gameState.lastPossession = this.PLAYERS.PLAYER1;
     this.gameState.player2Possession = false;
   }
 
-  ballPlayer2Collision(ball, player) {
+  givePlayer2Possession(ball, player) {
     this.gameState.player2Possession = true;
     this.gameState.lastPossession = this.PLAYERS.PLAYER2;
     this.gameState.player1Possession = false;
