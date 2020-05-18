@@ -355,8 +355,8 @@ export default class Play extends Phaser.Scene {
 
   getBallRelativeToShooter(ball, player) {
     return {
-      x: player.x + player.body.width / 2 + this.ball.body.width / 2 + 1,
-      y: player.y,
+      x: player.x + player.body.width / 2 + 2,
+      y: player.y - player.body.height / 2,
     };
   }
 
