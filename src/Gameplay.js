@@ -6,6 +6,7 @@ import courtImg from './assets/court.png';
 import backboardImg from './assets/backboard.png';
 import rimImg from './assets/front-rim.png';
 import rimBounceSound from './assets/rim-bounce.m4a';
+import ballBounceSound from './assets/ball-bounce.m4a';
 
 export default class Play extends Phaser.Scene {
   constructor() {
@@ -55,6 +56,7 @@ export default class Play extends Phaser.Scene {
       wasAboveRimTimeout: null,
       shootingSpotNum: 0,
       shotNum: 0,
+      gameOver: false,
     };
   }
 
@@ -66,6 +68,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('backboard', backboardImg);
     this.load.image('solid-rim', rimImg);
     this.load.audio('rim-bounce', rimBounceSound);
+    this.load.audio('ball-bounce', ballBounceSound);
   }
 
   create() {
@@ -264,6 +267,7 @@ export default class Play extends Phaser.Scene {
     this.givePlayer1Possession();
 
     this.soundEffects.rimBounce = this.sound.add('rim-bounce');
+    this.soundEffects.ballBounce = this.sound.add('ball-bounce');
   }
 
   update() {
@@ -479,14 +483,19 @@ export default class Play extends Phaser.Scene {
   }
 
   courtBallCollision(court, ball) {
+    const ballBounced =
+      !this.ball.body.wasTouching.down && this.ball.body.touching.down;
+    if (ballBounced) {
+      this.soundEffects.ballBounce.play();
+    }
     // Ball friction on court
-    if (ball.body.velocity.x > 0) {
-      ball.body.setVelocityX(
-        Math.max(ball.body.velocity.x - this.ballMovement.slowdown, 0)
+    if (this.ball.body.velocity.x > 0) {
+      this.ball.body.setVelocityX(
+        Math.max(this.ball.body.velocity.x - this.ballMovement.slowdown, 0)
       );
-    } else if (ball.body.velocity.x < 0) {
-      ball.body.setVelocityX(
-        Math.min(ball.body.velocity.x + this.ballMovement.slowdown, 0)
+    } else if (this.ball.body.velocity.x < 0) {
+      this.ball.body.setVelocityX(
+        Math.min(this.ball.body.velocity.x + this.ballMovement.slowdown, 0)
       );
     }
   }
