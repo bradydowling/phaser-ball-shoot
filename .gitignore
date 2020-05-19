@@ -6,3 +6,4 @@ build.zip
 dist/*.png
 dist/*.js
 dist/*.map
+dist/*.m4a

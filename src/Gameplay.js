@@ -5,7 +5,7 @@ import player2Img from './assets/paddle-2.png';
 import courtImg from './assets/court.png';
 import backboardImg from './assets/backboard.png';
 import rimImg from './assets/front-rim.png';
-// import start_sound from '../assets/sounds/sfx/announcer/enter-stage.wav';
+import rimBounceSound from './assets/rim-bounce.m4a';
 
 export default class Play extends Phaser.Scene {
   constructor() {
@@ -42,6 +42,7 @@ export default class Play extends Phaser.Scene {
     this.backRim;
     this.playerScoreText = [];
     this.shootingSpots = [0, 0, 0];
+    this.soundEffects = {};
 
     this.gameState = {
       gameStarted: false,
@@ -64,7 +65,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('court', courtImg);
     this.load.image('backboard', backboardImg);
     this.load.image('solid-rim', rimImg);
-    // this.load.audio('start_sound', start_sound);
+    this.load.audio('rim-bounce', rimBounceSound);
   }
 
   create() {
@@ -250,7 +251,11 @@ export default class Play extends Phaser.Scene {
     );
     this.physics.add.collider(this.ball, this.backboard);
     this.physics.add.collider(this.player2, this.frontRim);
-    this.physics.add.collider(this.ball, this.frontRim);
+    this.physics.add.collider(
+      this.ball,
+      this.frontRim,
+      this.ballRimCollision.bind(this)
+    );
     this.physics.add.collider(this.ball, this.backRim);
     this.physics.add.collider(this.player1, this.backboard);
     // this.physics.add.collider(this.player1, this.halfcourt);
@@ -258,8 +263,7 @@ export default class Play extends Phaser.Scene {
     // First shooter is player1
     this.givePlayer1Possession();
 
-    // this.soundEffects.start_sound = this.sound.add('start_sound');
-    // this.soundEffects.start_sound.play();
+    this.soundEffects.rimBounce = this.sound.add('rim-bounce');
   }
 
   update() {
@@ -497,5 +501,9 @@ export default class Play extends Phaser.Scene {
     this.gameState.player2Possession = true;
     this.gameState.lastPossession = this.PLAYERS.PLAYER2;
     this.gameState.player1Possession = false;
+  }
+
+  ballRimCollision() {
+    this.soundEffects.rimBounce.play();
   }
 }
