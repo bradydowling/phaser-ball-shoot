@@ -38,8 +38,7 @@ export default class Play extends Phaser.Scene {
     this.backboard;
     this.frontRim;
     this.backRim;
-    this.player1ScoreText;
-    this.player2ScoreText;
+    this.playerScoreText = [];
     this.shootingSpots = [0, 0, 0];
 
     this.gameState = {
@@ -179,7 +178,7 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
-    this.player1ScoreText = this.add.text(20, -70, 'Player 1: 0 🏀', {
+    this.playerScoreText[0] = this.add.text(20, -70, 'Player 1: 0 🏀', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
@@ -192,7 +191,7 @@ export default class Play extends Phaser.Scene {
     });
     this.brokenAnkleText.setVisible(false);
 
-    this.player2ScoreText = this.add.text(20, -40, 'Player 2: 0', {
+    this.playerScoreText[1] = this.add.text(20, -40, 'Player 2: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
@@ -237,12 +236,14 @@ export default class Play extends Phaser.Scene {
   update() {
     if (!this.gameState.justScored) {
       const scorer = this.getScorer();
-      if (scorer === 0) {
-        this.gameState.score[0] = this.gameState.score[0] + 1;
-        this.player1ScoreText.text = this.getPlayerScoreText(this.player1);
-      } else if (scorer === 1) {
-        this.gameState.score[1] = this.gameState.score[1] + 1;
-        this.player2ScoreText.text = this.getPlayerScoreText(this.player2);
+      if (scorer) {
+        const scorerIndex = scorer - 1;
+        const playerKey = Object.values(this.PLAYERS)[scorerIndex];
+        this.gameState.score[scorerIndex] =
+          this.gameState.score[scorerIndex] + 1;
+        this.playerScoreText[scorerIndex].text = this.getPlayerScoreText(
+          this[playerKey]
+        );
       }
     }
 
@@ -353,6 +354,8 @@ export default class Play extends Phaser.Scene {
       this.player2.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player1.x = this.rebounderPosition;
     }
+    this.gameState.justScored = false;
+    this.physics.world.timeScale = 1;
   }
 
   getBallRelativeToShooter(ball, player) {
@@ -381,8 +384,8 @@ export default class Play extends Phaser.Scene {
 
   getPlayerScoreText(player) {
     const possessionSymbol = player.isShooter ? '🏀' : '';
-    return `Player ${player.playerNum + 1}: ${
-      this.gameState.score[playerNum]
+    return `Player ${player.playerNum}: ${
+      this.gameState.score[player.playerNum - 1]
     } ${possessionSymbol}`;
   }
 
@@ -399,7 +402,7 @@ export default class Play extends Phaser.Scene {
         this.wasAboveRim = false;
       }, 200);
 
-      return;
+      return false;
     }
 
     const noOneHasPossession =
@@ -420,19 +423,14 @@ export default class Play extends Phaser.Scene {
       isAboveBackboardBottom;
 
     if (!pointScored) {
-      return;
+      return false;
     }
 
-    this.gameState.justScored = true;
-    setTimeout(() => {
-      this.gameState.justScored = false;
-    }, 500);
+    this.physics.world.timeScale = 0.25;
 
-    if (this.gameState.lastPossession === this.PLAYERS.PLAYER1) {
-      return 0;
-    } else {
-      return 1;
-    }
+    this.gameState.justScored = this.gameState.lastPossession;
+    const scorerPlayerNum = this[this.gameState.lastPossession].playerNum;
+    return scorerPlayerNum;
   }
 
   playerCourtCollision(player, court) {
