@@ -483,8 +483,15 @@ export default class Play extends Phaser.Scene {
   }
 
   courtBallCollision(court, ball) {
+    const isAtGroundHeight =
+      this.ball.x >
+      this.court.y - this.court.body.halfHeight - this.player1.body.halfHeight;
     const ballBounced =
-      !this.ball.body.wasTouching.down && this.ball.body.touching.down;
+      !this.ball.body.wasTouching.down &&
+      this.ball.body.touching.down &&
+      isAtGroundHeight &&
+      !this.gameState.player1Possession &&
+      !this.gameState.player2Possession;
     if (ballBounced) {
       this.soundEffects.ballBounce.play();
     }
