@@ -143,6 +143,21 @@ export default class Play extends Phaser.Scene {
       d: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
 
+    this.shootingSpots.forEach((spot, i) => {
+      const shootingSpotLine = new Phaser.Geom.Line(
+        this.shootingSpots[i] + this.player1.body.width / 2,
+        this.physics.world.bounds.height - this.court.body.height,
+        this.shootingSpots[i] + this.player1.body.width / 2,
+        this.physics.world.bounds.height - this.court.body.height + 20
+      );
+
+      const shootingSpotGraphics = this.add.graphics({
+        lineStyle: { width: 4, color: 0xffffff },
+      });
+
+      shootingSpotGraphics.strokeLineShape(shootingSpotLine);
+    });
+
     const halfcourt = this.physics.add.staticGroup();
     halfcourt.add(this.add.zone(400, 100, 1, 800));
 
