@@ -15,11 +15,16 @@ export default class Play extends Phaser.Scene {
     );
 
     const middleX = this.physics.world.bounds.width / 2;
-    const titleText = this.add.text(middleX, 0, 'Tip Dunk Shootout', {
-      fontFamily: 'Monaco, Courier, monospace',
-      fontSize: '40px',
-      fill: '#fff',
-    });
+    const titleText = this.add.text(
+      middleX,
+      this.physics.world.bounds.height * 0.25,
+      'Tip Dunk Shootout',
+      {
+        fontFamily: 'Monaco, Courier, monospace',
+        fontSize: '40px',
+        fill: '#fff',
+      }
+    );
     titleText.setOrigin(0.5);
 
     const middleY = this.physics.world.bounds.height / 2;

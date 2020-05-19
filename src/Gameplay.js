@@ -195,34 +195,34 @@ export default class Play extends Phaser.Scene {
 
     rimGraphics.strokeLineShape(rimLine);
 
-    this.add.text(20, -100, 'Score', {
+    this.add.text(20, 40, 'Score', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.playerScoreText[0] = this.add.text(20, -70, 'Player 1: 0 🏀', {
+    this.playerScoreText[0] = this.add.text(20, 70, 'Player 1: 0 🏀', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.brokenAnkleText = this.add.text(500, 0, 'Broke ya ankles!!!', {
+    this.brokenAnkleText = this.add.text(500, 100, 'Broke ya ankles!!!', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
     this.brokenAnkleText.setVisible(false);
 
-    this.playerScoreText[1] = this.add.text(20, -40, 'Player 2: 0', {
+    this.playerScoreText[1] = this.add.text(20, 95, 'Player 2: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.gameOverText = this.add.text(200, 0, 'Game over!', {
+    this.gameOverText = this.add.text(300, 300, 'Game over!', {
       fontFamily: 'Monaco, Courier, monospace',
-      fontSize: '20px',
+      fontSize: '30px',
       fill: '#fff',
     });
     this.gameOverText.setVisible(false);
@@ -362,8 +362,7 @@ export default class Play extends Phaser.Scene {
           this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
           this.gameState.shotNum = 0;
         } else {
-          // Game over (or go to overtime)
-          this.gameOverText.setVisible(true);
+          this.gameState.gameOver = true;
         }
         setTimeout(() => {
           this.endShot();
@@ -397,6 +396,9 @@ export default class Play extends Phaser.Scene {
       this.player1.x = this.rebounderPosition;
     }
     this.gameState.justScored = false;
+    if (this.gameState.gameOver) {
+      this.gameOverText.setVisible(true);
+    }
   }
 
   getBallRelativeToShooter(ball, player) {
