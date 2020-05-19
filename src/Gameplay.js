@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import ballImg from './assets/ball.png';
 import playerImg from './assets/paddle.png';
+import player2Img from './assets/paddle-2.png';
 import courtImg from './assets/court.png';
 import backboardImg from './assets/backboard.png';
 import rimImg from './assets/front-rim.png';
@@ -58,6 +59,7 @@ export default class Play extends Phaser.Scene {
   preload() {
     this.load.image('ball', ballImg);
     this.load.image('player', playerImg);
+    this.load.image('player2', player2Img);
     this.load.image('court', courtImg);
     this.load.image('backboard', backboardImg);
     this.load.image('solid-rim', rimImg);
@@ -88,7 +90,7 @@ export default class Play extends Phaser.Scene {
     this.player2 = this.physics.add.sprite(
       this.rebounderPosition,
       this.physics.world.bounds.height / 2,
-      'player'
+      'player2'
     );
     this.player2.setCollideWorldBounds(true);
     this.player2.setFrictionX(this.playerMovement.friction);
@@ -270,11 +272,7 @@ export default class Play extends Phaser.Scene {
     }
 
     if (this.keys.w.isDown && this.player1.body.touching.down) {
-      if (this.gameState.player1Possession) {
-        this.player1.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
-      } else {
-        this.player1.body.setVelocityY(-this.playerMovement.jumpSpeed);
-      }
+      this.player1.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
     } else if (this.keys.s.isDown && this.gameState.player1Possession) {
       this.gameState.player1Possession = false;
       this.ball.body.setVelocityX(this.getDropSpeed(this.player1).x);
@@ -370,7 +368,6 @@ export default class Play extends Phaser.Scene {
       this.player1.x = this.rebounderPosition;
     }
     this.gameState.justScored = false;
-    this.physics.world.timeScale = 1;
   }
 
   getBallRelativeToShooter(ball, player) {
@@ -440,8 +437,6 @@ export default class Play extends Phaser.Scene {
     if (!pointScored) {
       return false;
     }
-
-    this.physics.world.timeScale = 0.25;
 
     this.gameState.justScored = this.gameState.lastPossession;
     const scorerPlayerNum = this[this.gameState.lastPossession].playerNum;
