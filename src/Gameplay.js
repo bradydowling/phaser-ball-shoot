@@ -214,6 +214,13 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
+    this.gameOverText = this.add.text(200, 0, 'Game over!', {
+      fontFamily: 'Monaco, Courier, monospace',
+      fontSize: '20px',
+      fill: '#fff',
+    });
+    this.gameOverText.setVisible(false);
+
     this.physics.add.collider(
       this.ball,
       this.player1,
@@ -256,8 +263,9 @@ export default class Play extends Phaser.Scene {
       if (scorer) {
         const scorerIndex = scorer - 1;
         const playerKey = Object.values(this.PLAYERS)[scorerIndex];
+        const pointsScored = this.gameState.shotNum === 0 ? 2 : 1;
         this.gameState.score[scorerIndex] =
-          this.gameState.score[scorerIndex] + 1;
+          this.gameState.score[scorerIndex] + pointsScored;
         this.playerScoreText[scorerIndex].text = this.getPlayerScoreText(
           this[playerKey]
         );
@@ -341,8 +349,8 @@ export default class Play extends Phaser.Scene {
           this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
           this.gameState.shotNum = 0;
         } else {
-          // Player 2 shoots second so game over (TODO: Needs to account for overtime)
-          this.gameState.shotNum = 0;
+          // Game over (or go to overtime)
+          this.gameOverText.setVisible(true);
         }
         setTimeout(() => {
           this.endShot();
