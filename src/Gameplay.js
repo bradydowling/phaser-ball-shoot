@@ -57,6 +57,7 @@ export default class Play extends Phaser.Scene {
       shootingSpotNum: 0,
       shotNum: 0,
       gameOver: false,
+      canRebounderScore: true,
     };
   }
 
@@ -220,12 +221,18 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
-    this.gameOverText = this.add.text(300, 300, 'Game over!', {
-      fontFamily: 'Monaco, Courier, monospace',
-      fontSize: '30px',
-      fill: '#fff',
-    });
+    this.gameOverText = this.add.text(
+      this.physics.world.bounds.width * 0.5,
+      this.physics.world.bounds.height * 0.4,
+      "Game over...it's a tie!",
+      {
+        fontFamily: 'Monaco, Courier, monospace',
+        fontSize: '30px',
+        fill: '#fff',
+      }
+    );
     this.gameOverText.setVisible(false);
+    this.gameOverText.setOrigin(0.5);
 
     this.physics.add.collider(
       this.ball,
@@ -396,9 +403,17 @@ export default class Play extends Phaser.Scene {
       this.player1.x = this.rebounderPosition;
     }
     this.gameState.justScored = false;
-    if (this.gameState.gameOver) {
-      this.gameOverText.setVisible(true);
+
+    if (!this.gameState.gameOver) {
+      return;
     }
+
+    if (this.gameState.score[0] > this.gameState.score[1]) {
+      this.gameOverText.text = 'Player 1 wins!!';
+    } else if (this.gameState.score[1] > this.gameState.score[0]) {
+      this.gameOverText.text = 'Player 2 wins!!';
+    }
+    this.gameOverText.setVisible(true);
   }
 
   getBallRelativeToShooter(ball, player) {
@@ -433,6 +448,10 @@ export default class Play extends Phaser.Scene {
   }
 
   getScorer() {
+    if (this.gameState.gameOver) {
+      return false;
+    }
+
     const isAboveTheRim = this.ball.body.y < this.frontRim.body.y;
     if (isAboveTheRim) {
       this.wasAboveRim = true;
