@@ -265,7 +265,11 @@ export default class Play extends Phaser.Scene {
     }
 
     this.player1.body.setVelocityX(0);
-    if (this.keys.a.isDown && !this.player1.isShooter) {
+    if (
+      this.keys.a.isDown &&
+      !this.player1.isShooter &&
+      this.player1.x > this.physics.world.bounds.width / 2
+    ) {
       this.player1.body.setVelocityX(-this.playerMovement.runSpeed);
     } else if (this.keys.d.isDown && !this.player1.isShooter) {
       this.player1.body.setVelocityX(this.playerMovement.runSpeed);
@@ -306,7 +310,11 @@ export default class Play extends Phaser.Scene {
     }
 
     this.player2.body.setVelocityX(0);
-    if (this.keys.left.isDown && !this.player2.isShooter) {
+    if (
+      this.keys.left.isDown &&
+      !this.player2.isShooter &&
+      this.player2.x > this.physics.world.bounds.width / 2
+    ) {
       this.player2.body.setVelocityX(-this.playerMovement.runSpeed);
     } else if (this.keys.right.isDown && !this.player2.isShooter) {
       this.player2.body.setVelocityX(this.playerMovement.runSpeed);
