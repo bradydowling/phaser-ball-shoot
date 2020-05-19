@@ -5,6 +5,7 @@ import player2Img from './assets/paddle-2.png';
 import courtImg from './assets/court.png';
 import backboardImg from './assets/backboard.png';
 import rimImg from './assets/front-rim.png';
+// import start_sound from '../assets/sounds/sfx/announcer/enter-stage.wav';
 
 export default class Play extends Phaser.Scene {
   constructor() {
@@ -63,6 +64,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('court', courtImg);
     this.load.image('backboard', backboardImg);
     this.load.image('solid-rim', rimImg);
+    // this.load.audio('start_sound', start_sound);
   }
 
   create() {
@@ -255,6 +257,9 @@ export default class Play extends Phaser.Scene {
 
     // First shooter is player1
     this.givePlayer1Possession();
+
+    // this.soundEffects.start_sound = this.sound.add('start_sound');
+    // this.soundEffects.start_sound.play();
   }
 
   update() {
