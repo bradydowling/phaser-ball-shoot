@@ -47,8 +47,6 @@ export default class Play extends Phaser.Scene {
 
     this.gameState = {
       gameStarted: false,
-      player1Possession: true,
-      player2Possession: false,
       lastPossession: null,
       score: [0, 0],
       justScored: false,
@@ -93,6 +91,7 @@ export default class Play extends Phaser.Scene {
     this.player1.setGravityY(this.playerMovement.gravity);
     this.player1.isShooter = true;
     this.player1.playerNum = 1;
+    this.player1.hasPossession = true;
 
     this.rebounderPosition = this.physics.world.bounds.width * 0.75;
     this.player2 = this.physics.add.sprite(
@@ -108,6 +107,7 @@ export default class Play extends Phaser.Scene {
     );
     this.player2.setGravityY(this.playerMovement.gravity);
     this.player2.playerNum = 2;
+    this.player2.hasPossession = false;
 
     this.ball = this.physics.add.sprite(0, 0, 'ball');
     const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
@@ -151,6 +151,7 @@ export default class Play extends Phaser.Scene {
       a: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
       s: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       d: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      o: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.O),
     };
 
     this.shootingSpots.forEach((spot, i) => {
@@ -197,33 +198,47 @@ export default class Play extends Phaser.Scene {
 
     rimGraphics.strokeLineShape(rimLine);
 
-    this.add.text(20, 40, 'Score', {
+    this.add.text(20, 20, 'Score', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    const soundButton = this.add.text(
-      this.physics.world.bounds.width - 200,
-      40,
-      'Sound on',
+    this.playerScoreText[0] = this.add.text(20, 50, 'Player 1: 0 🏀', {
+      fontFamily: 'Monaco, Courier, monospace',
+      fontSize: '20px',
+      fill: '#fff',
+    });
+
+    this.playerScoreText[1] = this.add.text(20, 75, 'Player 2: 0', {
+      fontFamily: 'Monaco, Courier, monospace',
+      fontSize: '20px',
+      fill: '#fff',
+    });
+
+    this.soundButton = this.add.text(
+      this.physics.world.bounds.width - 10,
+      20,
+      'Sound FX: 💯',
       {
         fontFamily: 'Monaco, Courier, monospace',
         fontSize: '20px',
         fill: '#fff',
       }
     );
+    this.soundButton.setOrigin(1, 0);
 
-    soundButton.on('pointerdown', () => {
-      this.gameState.soundOn = !this.gameState.soundOn;
-      soundButton.text = `Sound ${this.gameState.soundOn ? 'on' : 'off'}`;
-    });
-
-    this.playerScoreText[0] = this.add.text(20, 70, 'Player 1: 0 🏀', {
-      fontFamily: 'Monaco, Courier, monospace',
-      fontSize: '20px',
-      fill: '#fff',
-    });
+    this.toggleSoundText = this.add.text(
+      this.physics.world.bounds.width - 10,
+      45,
+      'on/off: [o]',
+      {
+        fontFamily: 'Monaco, Courier, monospace',
+        fontSize: '20px',
+        fill: '#fff',
+      }
+    );
+    this.toggleSoundText.setOrigin(1, 0);
 
     this.brokenAnkleText = this.add.text(500, 100, 'Broke ya ankles!!!', {
       fontFamily: 'Monaco, Courier, monospace',
@@ -231,12 +246,6 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
     this.brokenAnkleText.setVisible(false);
-
-    this.playerScoreText[1] = this.add.text(20, 95, 'Player 2: 0', {
-      fontFamily: 'Monaco, Courier, monospace',
-      fontSize: '20px',
-      fill: '#fff',
-    });
 
     this.gameOverText = this.add.text(
       this.physics.world.bounds.width * 0.5,
@@ -295,6 +304,10 @@ export default class Play extends Phaser.Scene {
   }
 
   update() {
+    if (this.keys.o.isDown) {
+      this.toggleSound();
+    }
+
     if (!this.gameState.justScored) {
       const scorer = this.getScorer();
       if (scorer) {
@@ -322,13 +335,13 @@ export default class Play extends Phaser.Scene {
 
     if (this.keys.w.isDown && this.player1.body.touching.down) {
       this.player1.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
-    } else if (this.keys.s.isDown && this.gameState.player1Possession) {
-      this.gameState.player1Possession = false;
+    } else if (this.keys.s.isDown && this.player1.hasPossession) {
+      this.player1.hasPossession = false;
       this.ball.body.setVelocityX(this.getDropSpeed(this.player1).x);
       this.ball.body.setVelocityY(this.getDropSpeed(this.player1).y);
     }
-    if (this.keys.space.isDown && this.gameState.player1Possession) {
-      this.gameState.player1Possession = false;
+    if (this.keys.space.isDown && this.player1.hasPossession) {
+      this.player1.hasPossession = false;
       this.ball.body.setVelocityX(this.getShotSpeed(this.player1).x);
       this.ball.body.setVelocityY(this.getShotSpeed(this.player1).y);
 
@@ -367,13 +380,13 @@ export default class Play extends Phaser.Scene {
 
     if (this.keys.up.isDown && this.player2.body.touching.down) {
       this.player2.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
-    } else if (this.keys.down.isDown && this.gameState.player2Possession) {
-      this.gameState.player2Possession = false;
+    } else if (this.keys.down.isDown && this.player2.hasPossession) {
+      this.player2.hasPossession = false;
       this.ball.body.setVelocityX(this.getDropSpeed(this.player2).x);
       this.ball.body.setVelocityY(this.getDropSpeed(this.player2).y);
     }
-    if (this.keys.shift.isDown && this.gameState.player2Possession) {
-      this.gameState.player2Possession = false;
+    if (this.keys.shift.isDown && this.player2.hasPossession) {
+      this.player2.hasPossession = false;
       this.ball.body.setVelocityX(this.getShotSpeed(this.player2).x);
       this.ball.body.setVelocityY(this.getShotSpeed(this.player2).y);
 
@@ -394,11 +407,11 @@ export default class Play extends Phaser.Scene {
       }
     }
 
-    if (this.gameState.player1Possession) {
+    if (this.player1.hasPossession) {
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
       this.ball.body.x = ballPos.x;
       this.ball.body.y = ballPos.y;
-    } else if (this.gameState.player2Possession) {
+    } else if (this.player2.hasPossession) {
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player2);
       this.ball.body.x = ballPos.x;
       this.ball.body.y = ballPos.y;
@@ -406,8 +419,8 @@ export default class Play extends Phaser.Scene {
   }
 
   endShot() {
-    this.gameState.player1Possession = false;
-    this.gameState.player2Possession = false;
+    this.player1.hasPossession = false;
+    this.player2.hasPossession = false;
 
     if (this.player1.isShooter) {
       this.givePlayer1Possession();
@@ -485,7 +498,7 @@ export default class Play extends Phaser.Scene {
     }
 
     const noOneHasPossession =
-      !this.gameState.player1Possession && !this.gameState.player2Possession;
+      !this.player1.hasPossession && !this.player2.hasPossession;
     const isBallInTheCylinder =
       this.ball.body.x > this.frontRim.body.x &&
       this.ball.body.x < this.backRim.body.x;
@@ -528,8 +541,8 @@ export default class Play extends Phaser.Scene {
       !this.ball.body.wasTouching.down &&
       this.ball.body.touching.down &&
       isAtGroundHeight &&
-      !this.gameState.player1Possession &&
-      !this.gameState.player2Possession;
+      !this.player1.hasPossession &&
+      !this.player2.hasPossession;
     if (ballBounced && this.gameState.soundOn) {
       this.soundEffects.ballBounce.play();
     }
@@ -546,15 +559,15 @@ export default class Play extends Phaser.Scene {
   }
 
   givePlayer1Possession(ball, player) {
-    this.gameState.player1Possession = true;
+    this.player1.hasPossession = true;
     this.gameState.lastPossession = this.PLAYERS.PLAYER1;
-    this.gameState.player2Possession = false;
+    this.player2.hasPossession = false;
   }
 
   givePlayer2Possession(ball, player) {
-    this.gameState.player2Possession = true;
+    this.player2.hasPossession = true;
     this.gameState.lastPossession = this.PLAYERS.PLAYER2;
-    this.gameState.player1Possession = false;
+    this.player1.hasPossession = false;
   }
 
   ballRimCollision() {
@@ -562,5 +575,17 @@ export default class Play extends Phaser.Scene {
       return;
     }
     this.soundEffects.rimBounce.play();
+  }
+
+  toggleSound() {
+    if (this.debouncingSoundToggle) {
+      return;
+    }
+    this.debouncingSoundToggle = true;
+    this.gameState.soundOn = !this.gameState.soundOn;
+    this.soundButton.text = `Sound FX: ${this.gameState.soundOn ? '💯' : '❌'}`;
+    setTimeout(() => {
+      this.debouncingSoundToggle = false;
+    }, 100);
   }
 }
