@@ -58,6 +58,7 @@ export default class Play extends Phaser.Scene {
       shotNum: 0,
       gameOver: false,
       canRebounderScore: true,
+      soundOn: true,
     };
   }
 
@@ -200,6 +201,22 @@ export default class Play extends Phaser.Scene {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
+    });
+
+    const soundButton = this.add.text(
+      this.physics.world.bounds.width - 200,
+      40,
+      'Sound on',
+      {
+        fontFamily: 'Monaco, Courier, monospace',
+        fontSize: '20px',
+        fill: '#fff',
+      }
+    );
+
+    soundButton.on('pointerdown', () => {
+      this.gameState.soundOn = !this.gameState.soundOn;
+      soundButton.text = `Sound ${this.gameState.soundOn ? 'on' : 'off'}`;
     });
 
     this.playerScoreText[0] = this.add.text(20, 70, 'Player 1: 0 🏀', {
@@ -513,7 +530,7 @@ export default class Play extends Phaser.Scene {
       isAtGroundHeight &&
       !this.gameState.player1Possession &&
       !this.gameState.player2Possession;
-    if (ballBounced) {
+    if (ballBounced && this.gameState.soundOn) {
       this.soundEffects.ballBounce.play();
     }
     // Ball friction on court
@@ -541,6 +558,9 @@ export default class Play extends Phaser.Scene {
   }
 
   ballRimCollision() {
+    if (!this.gameState.soundOn) {
+      return;
+    }
     this.soundEffects.rimBounce.play();
   }
 }
