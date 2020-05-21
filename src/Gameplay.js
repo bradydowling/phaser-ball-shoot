@@ -464,7 +464,7 @@ export default class Play extends Phaser.Scene {
         this.gameState.lastPossession === this.PLAYERS.PLAYER2 &&
         this.gameState.justScored;
       this.player2.shotChart.push(shooterScored ? true : false);
-      const playerIndex = this.getPlayerIndex(this.player1);
+      const playerIndex = this.getPlayerIndex(this.player2);
       this.playerScoreText[playerIndex].text = this.getPlayerScoreText(
         this.player2
       );
