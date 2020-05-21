@@ -140,6 +140,8 @@ export default class Play extends Phaser.Scene {
       'solid-rim'
     );
     this.frontRim.setImmovable();
+    this.frontRim.setCircle(this.frontRim.width / 2);
+
     this.backRim = this.physics.add.sprite(
       this.physics.world.bounds.width * 0.95 - 10,
       this.physics.world.bounds.height * 0.55,
