@@ -314,7 +314,7 @@ export default class Play extends Phaser.Scene {
       const scorer = this.getScorer();
       if (scorer) {
         const scorerIndex = scorer - 1;
-        const playerKey = Object.values(this.PLAYERS)[scorerIndex];
+        const playerKey = this.getPlayerKey(scorerIndex);
         const pointsScored = this.gameState.shotNum === 0 ? 2 : 1;
         this.gameState.score[scorerIndex] =
           this.gameState.score[scorerIndex] + pointsScored;
@@ -420,6 +420,14 @@ export default class Play extends Phaser.Scene {
     }
   }
 
+  getPlayerKey(playerIndex) {
+    return Object.values(this.PLAYERS)[playerIndex];
+  }
+
+  getPlayerIndex(player) {
+    return player.playerNum - 1;
+  }
+
   endShot() {
     this.player1.hasPossession = false;
     this.player2.hasPossession = false;
@@ -429,16 +437,26 @@ export default class Play extends Phaser.Scene {
       this.player1.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player2.x = this.rebounderPosition;
       const shooterScored =
-        this.gameState.lastPossession === this.PLAYERS.PLAYER1;
+        this.gameState.lastPossession === this.PLAYERS.PLAYER1 &&
+        this.gameState.justScored;
       this.player1.shotChart.push(shooterScored ? true : false);
+      const playerIndex = this.getPlayerIndex(this.player1);
+      this.playerScoreText[playerIndex].text = this.getPlayerScoreText(
+        this.player1
+      );
     }
     if (this.player2.isShooter) {
       this.givePlayer2Possession();
       this.player2.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player1.x = this.rebounderPosition;
       const shooterScored =
-        this.gameState.lastPossession === this.PLAYERS.PLAYER2;
+        this.gameState.lastPossession === this.PLAYERS.PLAYER2 &&
+        this.gameState.justScored;
       this.player2.shotChart.push(shooterScored ? true : false);
+      const playerIndex = this.getPlayerIndex(this.player1);
+      this.playerScoreText[playerIndex].text = this.getPlayerScoreText(
+        this.player2
+      );
     }
     this.gameState.justScored = false;
 
@@ -484,7 +502,8 @@ export default class Play extends Phaser.Scene {
       const isMoneyBall = (i + 1) % 3 === 0;
       const ballSymbol = isMoneyBall ? '🏐' : '🏀';
       const thisShot = shot ? ballSymbol : '❌';
-      return `${chart} ${thisShot}`;
+      const rackDivider = i === 3 || i === 6 ? '|' : '';
+      return `${chart}${rackDivider}${thisShot}`;
     }, '');
     return `${possessionSymbol} Player ${player.playerNum}: ${
       this.gameState.score[player.playerNum - 1]
