@@ -430,7 +430,7 @@ export default class Play extends Phaser.Scene {
       this.player2.x = this.rebounderPosition;
       const shooterScored =
         this.gameState.lastPossession === this.PLAYERS.PLAYER1;
-      this.player1.shotChart.push(shooterScored ? 1 : 0);
+      this.player1.shotChart.push(shooterScored ? true : false);
     }
     if (this.player2.isShooter) {
       this.givePlayer2Possession();
@@ -438,7 +438,7 @@ export default class Play extends Phaser.Scene {
       this.player1.x = this.rebounderPosition;
       const shooterScored =
         this.gameState.lastPossession === this.PLAYERS.PLAYER2;
-      this.player2.shotChart.push(shooterScored ? 1 : 0);
+      this.player2.shotChart.push(shooterScored ? true : false);
     }
     this.gameState.justScored = false;
 
@@ -480,9 +480,15 @@ export default class Play extends Phaser.Scene {
 
   getPlayerScoreText(player) {
     const possessionSymbol = player.isShooter ? '🏀' : '🙌';
+    const shotChart = player.shotChart.reduce((chart, shot, i) => {
+      const isMoneyBall = (i + 1) % 3 === 0;
+      const ballSymbol = isMoneyBall ? '🏐' : '🏀';
+      const thisShot = shot ? ballSymbol : '❌';
+      return `${chart} ${thisShot}`;
+    }, '');
     return `${possessionSymbol} Player ${player.playerNum}: ${
       this.gameState.score[player.playerNum - 1]
-    }`;
+    } ${shotChart}`;
   }
 
   getScorer() {
