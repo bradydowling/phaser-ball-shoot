@@ -5,6 +5,7 @@ import player2Img from './assets/paddle-2.png';
 import courtImg from './assets/court.png';
 import backboardImg from './assets/backboard.png';
 import rimImg from './assets/front-rim.png';
+import netImg from './assets/net.png';
 import rimBounceSound from './assets/rim-bounce.m4a';
 import ballBounceSound from './assets/ball-bounce.m4a';
 
@@ -67,6 +68,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('court', courtImg);
     this.load.image('backboard', backboardImg);
     this.load.image('solid-rim', rimImg);
+    this.load.image('net', netImg);
     this.load.audio('rim-bounce', rimBounceSound);
     this.load.audio('ball-bounce', ballBounceSound);
   }
@@ -148,6 +150,13 @@ export default class Play extends Phaser.Scene {
       'solid-rim'
     );
     this.backRim.setImmovable();
+
+    this.net = this.physics.add.sprite(
+      this.physics.world.bounds.width * 0.95 - 50,
+      this.physics.world.bounds.height * 0.585,
+      'net'
+    );
+    this.net.setImmovable();
 
     this.keys = {
       ...this.input.keyboard.createCursorKeys(),
