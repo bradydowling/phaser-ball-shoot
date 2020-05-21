@@ -92,6 +92,7 @@ export default class Play extends Phaser.Scene {
     this.player1.isShooter = true;
     this.player1.playerNum = 1;
     this.player1.hasPossession = true;
+    this.player1.shotChart = [];
 
     this.rebounderPosition = this.physics.world.bounds.width * 0.75;
     this.player2 = this.physics.add.sprite(
@@ -108,6 +109,7 @@ export default class Play extends Phaser.Scene {
     this.player2.setGravityY(this.playerMovement.gravity);
     this.player2.playerNum = 2;
     this.player2.hasPossession = false;
+    this.player2.shotChart = [];
 
     this.ball = this.physics.add.sprite(0, 0, 'ball');
     const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
@@ -204,13 +206,13 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
-    this.playerScoreText[0] = this.add.text(20, 50, 'Player 1: 0 🏀', {
+    this.playerScoreText[0] = this.add.text(20, 50, '🏀 Player 1: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.playerScoreText[1] = this.add.text(20, 75, 'Player 2: 0', {
+    this.playerScoreText[1] = this.add.text(20, 75, '🙌 Player 2: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
@@ -426,11 +428,17 @@ export default class Play extends Phaser.Scene {
       this.givePlayer1Possession();
       this.player1.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player2.x = this.rebounderPosition;
+      const shooterScored =
+        this.gameState.lastPossession === this.PLAYERS.PLAYER1;
+      this.player1.shotChart.push(shooterScored ? 1 : 0);
     }
     if (this.player2.isShooter) {
       this.givePlayer2Possession();
       this.player2.x = this.shootingSpots[this.gameState.shootingSpotNum];
       this.player1.x = this.rebounderPosition;
+      const shooterScored =
+        this.gameState.lastPossession === this.PLAYERS.PLAYER2;
+      this.player2.shotChart.push(shooterScored ? 1 : 0);
     }
     this.gameState.justScored = false;
 
@@ -471,10 +479,10 @@ export default class Play extends Phaser.Scene {
   }
 
   getPlayerScoreText(player) {
-    const possessionSymbol = player.isShooter ? '🏀' : '';
-    return `Player ${player.playerNum}: ${
+    const possessionSymbol = player.isShooter ? '🏀' : '🙌';
+    return `${possessionSymbol} Player ${player.playerNum}: ${
       this.gameState.score[player.playerNum - 1]
-    } ${possessionSymbol}`;
+    }`;
   }
 
   getScorer() {
