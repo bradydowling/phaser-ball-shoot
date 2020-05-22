@@ -37,6 +37,7 @@ export default class Play extends Phaser.Scene {
 
     this.player1;
     this.player2;
+    this.players = [];
     this.ball;
     this.court;
     this.backboard;
@@ -50,9 +51,12 @@ export default class Play extends Phaser.Scene {
       gameStarted: false,
       lastPossession: null,
       score: [0, 0],
-      justScored: false,
       wasAboveRim: false,
       wasAboveRimTimeout: null,
+      justScored: false,
+      shotReleased: false,
+      ballHitGround: false,
+      hasRebounded: false,
       shootingSpotNum: 0,
       shotNum: 0,
       gameOver: false,
@@ -95,6 +99,7 @@ export default class Play extends Phaser.Scene {
     this.player1.playerNum = 1;
     this.player1.hasPossession = true;
     this.player1.shotChart = [];
+    this.players.push(this.player1);
 
     this.rebounderPosition = this.physics.world.bounds.width * 0.75;
     this.player2 = this.physics.add.sprite(
@@ -112,6 +117,7 @@ export default class Play extends Phaser.Scene {
     this.player2.playerNum = 2;
     this.player2.hasPossession = false;
     this.player2.shotChart = [];
+    this.players.push(this.player2);
 
     this.ball = this.physics.add.sprite(0, 0, 'ball');
     const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
@@ -274,9 +280,9 @@ export default class Play extends Phaser.Scene {
     this.gameOverText.setOrigin(0.5);
 
     this.physics.add.collider(
-      this.ball,
       this.player1,
-      this.givePlayer1Possession.bind(this)
+      this.ball,
+      this.setPlayerPossession.bind(this)
     );
     this.physics.add.collider(
       this.ball,
@@ -294,9 +300,9 @@ export default class Play extends Phaser.Scene {
       this.playerCourtCollision.bind(this)
     );
     this.physics.add.collider(
-      this.ball,
       this.player2,
-      this.givePlayer2Possession.bind(this)
+      this.ball,
+      this.setPlayerPossession.bind(this)
     );
     this.physics.add.collider(this.ball, this.backboard);
     this.physics.add.collider(this.player2, this.frontRim);
@@ -310,7 +316,7 @@ export default class Play extends Phaser.Scene {
     // this.physics.add.collider(this.player1, this.halfcourt);
 
     // First shooter is player1
-    this.givePlayer1Possession();
+    this.setPlayerPossession(this.player1);
 
     this.soundEffects.rimBounce = this.sound.add('rim-bounce');
     this.soundEffects.ballBounce = this.sound.add('ball-bounce');
@@ -319,6 +325,20 @@ export default class Play extends Phaser.Scene {
   update() {
     if (this.keys.o.isDown) {
       this.toggleSound();
+    }
+
+    if (this.player1.hasPossession) {
+      console.log('1 person');
+      const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
+      this.ball.body.x = ballPos.x;
+      this.ball.body.y = ballPos.y;
+    } else if (this.player2.hasPossession) {
+      console.log('2 person');
+      const ballPos = this.getBallRelativeToShooter(this.ball, this.player2);
+      this.ball.body.x = ballPos.x;
+      this.ball.body.y = ballPos.y;
+    } else {
+      console.log('what');
     }
 
     if (!this.gameState.justScored) {
@@ -349,16 +369,13 @@ export default class Play extends Phaser.Scene {
     if (this.keys.w.isDown && this.player1.body.touching.down) {
       this.player1.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
     } else if (this.keys.s.isDown && this.player1.hasPossession) {
-      this.player1.hasPossession = false;
-      this.ball.body.setVelocityX(this.getDropSpeed(this.player1).x);
-      this.ball.body.setVelocityY(this.getDropSpeed(this.player1).y);
+      this.drop(this.player1);
     }
     if (this.keys.space.isDown && this.player1.hasPossession) {
-      this.player1.hasPossession = false;
-      this.ball.body.setVelocityX(this.getShotSpeed(this.player1).x);
-      this.ball.body.setVelocityY(this.getShotSpeed(this.player1).y);
+      this.shoot(this.player1);
 
       if (this.player1.isShooter) {
+        this.gameState.shotReleased = true;
         // Each of these cases should set a 1 or 2 second timeout and then reset ball location or show final score/money ball status
         if (this.gameState.shotNum < 2) {
           // Next shot
@@ -394,16 +411,13 @@ export default class Play extends Phaser.Scene {
     if (this.keys.up.isDown && this.player2.body.touching.down) {
       this.player2.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
     } else if (this.keys.down.isDown && this.player2.hasPossession) {
-      this.player2.hasPossession = false;
-      this.ball.body.setVelocityX(this.getDropSpeed(this.player2).x);
-      this.ball.body.setVelocityY(this.getDropSpeed(this.player2).y);
+      this.drop(this.player2);
     }
     if (this.keys.shift.isDown && this.player2.hasPossession) {
-      this.player2.hasPossession = false;
-      this.ball.body.setVelocityX(this.getShotSpeed(this.player2).x);
-      this.ball.body.setVelocityY(this.getShotSpeed(this.player2).y);
+      this.shoot(this.player2);
 
       if (this.player2.isShooter) {
+        this.gameState.shotReleased = true;
         if (this.gameState.shotNum < 2) {
           // Next shot
           this.gameState.shotNum = this.gameState.shotNum + 1;
@@ -419,20 +433,42 @@ export default class Play extends Phaser.Scene {
         }, 2000);
       }
     }
+  }
 
-    if (this.player1.hasPossession) {
-      const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
-      this.ball.body.x = ballPos.x;
-      this.ball.body.y = ballPos.y;
-    } else if (this.player2.hasPossession) {
-      const ballPos = this.getBallRelativeToShooter(this.ball, this.player2);
-      this.ball.body.x = ballPos.x;
-      this.ball.body.y = ballPos.y;
-    }
+  shoot(player) {
+    player.hasPossession = false;
+    this.ball.body.setVelocityX(this.getShotSpeed(player).x);
+    this.ball.body.setVelocityY(this.getShotSpeed(player).y);
+  }
+
+  drop(player) {
+    player.hasPossession = false;
+    this.ball.body.setVelocityX(this.getDropSpeed(player).x);
+    this.ball.body.setVelocityY(this.getDropSpeed(player).y);
   }
 
   getPlayerKey(playerIndex) {
     return Object.values(this.PLAYERS)[playerIndex];
+  }
+
+  getShooter() {
+    if (this.player1.isShooter) {
+      return this.player1;
+    } else if (this.player2.isShooter) {
+      return this.player2;
+    } else {
+      console.log('No shooter');
+    }
+  }
+
+  getRebounder() {
+    if (this.player1.isShooter) {
+      return this.player2;
+    } else if (this.player2.isShooter) {
+      return this.player1;
+    } else {
+      console.log('No rebounder');
+    }
   }
 
   getPlayerIndex(player) {
@@ -440,36 +476,21 @@ export default class Play extends Phaser.Scene {
   }
 
   endShot() {
-    this.player1.hasPossession = false;
-    this.player2.hasPossession = false;
+    this.setPlayerPossession(false);
 
-    if (this.player1.isShooter) {
-      this.givePlayer1Possession();
-      this.player1.x = this.shootingSpots[this.gameState.shootingSpotNum];
-      this.player2.x = this.rebounderPosition;
-      const shooterScored =
-        this.gameState.lastPossession === this.PLAYERS.PLAYER1 &&
-        this.gameState.justScored;
-      this.player1.shotChart.push(shooterScored ? true : false);
-      const playerIndex = this.getPlayerIndex(this.player1);
-      this.playerScoreText[playerIndex].text = this.getPlayerScoreText(
-        this.player1
-      );
-    }
-    if (this.player2.isShooter) {
-      this.givePlayer2Possession();
-      this.player2.x = this.shootingSpots[this.gameState.shootingSpotNum];
-      this.player1.x = this.rebounderPosition;
-      const shooterScored =
-        this.gameState.lastPossession === this.PLAYERS.PLAYER2 &&
-        this.gameState.justScored;
-      this.player2.shotChart.push(shooterScored ? true : false);
-      const playerIndex = this.getPlayerIndex(this.player2);
-      this.playerScoreText[playerIndex].text = this.getPlayerScoreText(
-        this.player2
-      );
-    }
-    this.gameState.justScored = false;
+    const shooter = this.getShooter();
+    const rebounder = this.getRebounder();
+    this.setPlayerPossession(shooter);
+    shooter.x = this.shootingSpots[this.gameState.shootingSpotNum];
+    rebounder.x = this.rebounderPosition;
+    const shooterPlayerKey = this.getPlayerKey(shooter.playerNum - 1);
+    const shooterScored =
+      this.gameState.lastPossession === shooterPlayerKey &&
+      this.gameState.justScored;
+    shooter.shotChart.push(shooterScored ? true : false);
+    const playerIndex = this.getPlayerIndex(shooter);
+    this.playerScoreText[playerIndex].text = this.getPlayerScoreText(shooter);
+    this.resetShotState();
 
     if (!this.gameState.gameOver) {
       return;
@@ -481,6 +502,13 @@ export default class Play extends Phaser.Scene {
       this.gameOverText.text = 'Player 2 wins!!';
     }
     this.gameOverText.setVisible(true);
+  }
+
+  resetShotState() {
+    this.gameState.justScored = false;
+    this.gameState.shotReleased = false;
+    this.gameState.ballHitGround = false;
+    this.gameState.hasRebounded = false;
   }
 
   getBallRelativeToShooter(ball, player) {
@@ -602,16 +630,33 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  givePlayer1Possession(ball, player) {
-    this.player1.hasPossession = true;
-    this.gameState.lastPossession = this.PLAYERS.PLAYER1;
-    this.player2.hasPossession = false;
+  setPlayerPossession(player) {
+    if (!player) {
+      this.player1.hasPossession = false;
+      this.player2.hasPossession = false;
+      this.gameState.lastPossession = null;
+      return;
+    }
+
+    player.hasPossession = true;
+    const playerKey = this.getPlayerKey(player.playerNum - 1);
+    this.gameState.lastPossession = playerKey;
+    const otherPlayer = this.getOtherPlayer(player);
+    otherPlayer.hasPossession = false;
   }
 
-  givePlayer2Possession(ball, player) {
-    this.player2.hasPossession = true;
-    this.gameState.lastPossession = this.PLAYERS.PLAYER2;
-    this.player1.hasPossession = false;
+  getPlayerPossession() {
+    if (this.player1.hasPossession) {
+      return this.player1;
+    }
+    if (this.player2.hasPossession) {
+      return this.player2;
+    }
+    return;
+  }
+
+  getOtherPlayer(player) {
+    return this.players[(player.playerNum + 1) % 2];
   }
 
   ballRimCollision() {
