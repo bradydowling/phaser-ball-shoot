@@ -96,6 +96,7 @@ export default class Play extends Phaser.Scene {
     );
     this.player1.setGravityY(this.playerMovement.gravity);
     this.player1.setDataEnabled();
+    this.player1.setName('player1');
     this.player1.data.set('isShooter', true);
     this.player1.data.set('playerNum', 1);
     this.player1.data.set('hasPossession', true);
@@ -116,6 +117,7 @@ export default class Play extends Phaser.Scene {
     );
     this.player2.setGravityY(this.playerMovement.gravity);
     this.player2.setDataEnabled();
+    this.player2.setName('player2');
     this.player2.data.set('playerNum', 2);
     this.player2.data.set('hasPossession', false);
     this.player2.data.set('shotChart', []);
@@ -330,17 +332,13 @@ export default class Play extends Phaser.Scene {
     }
 
     if (this.player1.data.get('hasPossession')) {
-      console.log('1 person');
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
       this.ball.body.x = ballPos.x;
       this.ball.body.y = ballPos.y;
     } else if (this.player2.data.get('hasPossession')) {
-      console.log('2 person');
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player2);
       this.ball.body.x = ballPos.x;
       this.ball.body.y = ballPos.y;
-    } else {
-      console.log('what');
     }
 
     if (!this.gameState.justScored) {
@@ -668,7 +666,8 @@ export default class Play extends Phaser.Scene {
   }
 
   getOtherPlayer(player) {
-    return this.players[(player.data.get('playerNum') + 1) % 2];
+    if (player.name === 'player1') return this.player2;
+    if (player.name === 'player2') return this.player1;
   }
 
   ballRimCollision() {
