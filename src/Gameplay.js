@@ -344,13 +344,12 @@ export default class Play extends Phaser.Scene {
     if (!this.gameState.justScored) {
       const scorer = this.getScorer();
       if (scorer) {
-        const scorerIndex = scorer - 1;
-        const playerKey = this.getPlayerKey(scorerIndex);
+        const scorerIndex = this.getPlayerIndex(scorer);
         const pointsScored = this.gameState.shotNum === 0 ? 2 : 1;
         this.gameState.score[scorerIndex] =
           this.gameState.score[scorerIndex] + pointsScored;
         this.playerScoreText[scorerIndex].text = this.getPlayerScoreText(
-          this[playerKey]
+          this[scorer.name]
         );
       }
     }
@@ -486,11 +485,8 @@ export default class Play extends Phaser.Scene {
     this.setPlayerPossession(shooter);
     shooter.x = this.shootingSpots[this.gameState.shootingSpotNum];
     rebounder.x = this.rebounderPosition;
-    const shooterPlayerKey = this.getPlayerKey(
-      shooter.data.get('playerNum') - 1
-    );
     const shooterScored =
-      this.gameState.lastPossession === shooterPlayerKey &&
+      this.gameState.lastPossession === shooter.name &&
       this.gameState.justScored;
     const updatedShotChart = [...shooter.data.get('shotChart')];
     updatedShotChart.push(shooterScored ? true : false);
@@ -599,10 +595,7 @@ export default class Play extends Phaser.Scene {
     }
 
     this.gameState.justScored = this.gameState.lastPossession;
-    const scorerPlayerNum = this[this.gameState.lastPossession].data.get(
-      'playerNum'
-    );
-    return scorerPlayerNum;
+    return this[this.gameState.lastPossession];
   }
 
   playerCourtCollision(player, court) {
@@ -649,8 +642,7 @@ export default class Play extends Phaser.Scene {
     }
 
     player.data.set('hasPossession', true);
-    const playerKey = this.getPlayerKey(player.data.get('playerNum') - 1);
-    this.gameState.lastPossession = playerKey;
+    this.gameState.lastPossession = player.name;
     const otherPlayer = this.getOtherPlayer(player);
     otherPlayer.data.set('hasPossession', false);
   }
