@@ -95,10 +95,11 @@ export default class Play extends Phaser.Scene {
       this.playerMovement.bounce
     );
     this.player1.setGravityY(this.playerMovement.gravity);
-    this.player1.isShooter = true;
-    this.player1.playerNum = 1;
-    this.player1.hasPossession = true;
-    this.player1.shotChart = [];
+    this.player1.setDataEnabled();
+    this.player1.data.set('isShooter', true);
+    this.player1.data.set('playerNum', 1);
+    this.player1.data.set('hasPossession', true);
+    this.player1.data.set('shotChart', []);
     this.players.push(this.player1);
 
     this.rebounderPosition = this.physics.world.bounds.width * 0.75;
@@ -114,9 +115,10 @@ export default class Play extends Phaser.Scene {
       this.playerMovement.bounce
     );
     this.player2.setGravityY(this.playerMovement.gravity);
-    this.player2.playerNum = 2;
-    this.player2.hasPossession = false;
-    this.player2.shotChart = [];
+    this.player2.setDataEnabled();
+    this.player2.data.set('playerNum', 2);
+    this.player2.data.set('hasPossession', false);
+    this.player2.data.set('shotChart', []);
     this.players.push(this.player2);
 
     this.ball = this.physics.add.sprite(0, 0, 'ball');
@@ -327,12 +329,12 @@ export default class Play extends Phaser.Scene {
       this.toggleSound();
     }
 
-    if (this.player1.hasPossession) {
+    if (this.player1.data.get('hasPossession')) {
       console.log('1 person');
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
       this.ball.body.x = ballPos.x;
       this.ball.body.y = ballPos.y;
-    } else if (this.player2.hasPossession) {
+    } else if (this.player2.data.get('hasPossession')) {
       console.log('2 person');
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player2);
       this.ball.body.x = ballPos.x;
@@ -358,23 +360,23 @@ export default class Play extends Phaser.Scene {
     this.player1.body.setVelocityX(0);
     if (
       this.keys.a.isDown &&
-      !this.player1.isShooter &&
+      !this.player1.data.get('isShooter') &&
       this.player1.x > this.physics.world.bounds.width / 2
     ) {
       this.player1.body.setVelocityX(-this.playerMovement.runSpeed);
-    } else if (this.keys.d.isDown && !this.player1.isShooter) {
+    } else if (this.keys.d.isDown && !this.player1.data.get('isShooter')) {
       this.player1.body.setVelocityX(this.playerMovement.runSpeed);
     }
 
     if (this.keys.w.isDown && this.player1.body.touching.down) {
       this.player1.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
-    } else if (this.keys.s.isDown && this.player1.hasPossession) {
+    } else if (this.keys.s.isDown && this.player1.data.get('hasPossession')) {
       this.drop(this.player1);
     }
-    if (this.keys.space.isDown && this.player1.hasPossession) {
+    if (this.keys.space.isDown && this.player1.data.get('hasPossession')) {
       this.shoot(this.player1);
 
-      if (this.player1.isShooter) {
+      if (this.player1.data.get('isShooter')) {
         this.gameState.shotReleased = true;
         // Each of these cases should set a 1 or 2 second timeout and then reset ball location or show final score/money ball status
         if (this.gameState.shotNum < 2) {
@@ -384,10 +386,10 @@ export default class Play extends Phaser.Scene {
           // Next rack
           this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
           this.gameState.shotNum = 0;
-        } else if (this.player1.isShooter) {
+        } else if (this.player1.data.get('isShooter')) {
           // Next shooter
-          this.player1.isShooter = false;
-          this.player2.isShooter = true;
+          this.player1.data.set('isShooter', false);
+          this.player2.data.set('isShooter', true);
           this.gameState.shootingSpotNum = 0;
           this.gameState.shotNum = 0;
         }
@@ -400,23 +402,26 @@ export default class Play extends Phaser.Scene {
     this.player2.body.setVelocityX(0);
     if (
       this.keys.left.isDown &&
-      !this.player2.isShooter &&
+      !this.player2.data.get('isShooter') &&
       this.player2.x > this.physics.world.bounds.width / 2
     ) {
       this.player2.body.setVelocityX(-this.playerMovement.runSpeed);
-    } else if (this.keys.right.isDown && !this.player2.isShooter) {
+    } else if (this.keys.right.isDown && !this.player2.data.get('isShooter')) {
       this.player2.body.setVelocityX(this.playerMovement.runSpeed);
     }
 
     if (this.keys.up.isDown && this.player2.body.touching.down) {
       this.player2.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
-    } else if (this.keys.down.isDown && this.player2.hasPossession) {
+    } else if (
+      this.keys.down.isDown &&
+      this.player2.data.get('hasPossession')
+    ) {
       this.drop(this.player2);
     }
-    if (this.keys.shift.isDown && this.player2.hasPossession) {
+    if (this.keys.shift.isDown && this.player2.data.get('hasPossession')) {
       this.shoot(this.player2);
 
-      if (this.player2.isShooter) {
+      if (this.player2.data.get('isShooter')) {
         this.gameState.shotReleased = true;
         if (this.gameState.shotNum < 2) {
           // Next shot
@@ -436,13 +441,13 @@ export default class Play extends Phaser.Scene {
   }
 
   shoot(player) {
-    player.hasPossession = false;
+    player.data.set('hasPossession', false);
     this.ball.body.setVelocityX(this.getShotSpeed(player).x);
     this.ball.body.setVelocityY(this.getShotSpeed(player).y);
   }
 
   drop(player) {
-    player.hasPossession = false;
+    player.data.set('hasPossession', false);
     this.ball.body.setVelocityX(this.getDropSpeed(player).x);
     this.ball.body.setVelocityY(this.getDropSpeed(player).y);
   }
@@ -452,9 +457,9 @@ export default class Play extends Phaser.Scene {
   }
 
   getShooter() {
-    if (this.player1.isShooter) {
+    if (this.player1.data.get('isShooter')) {
       return this.player1;
-    } else if (this.player2.isShooter) {
+    } else if (this.player2.data.get('isShooter')) {
       return this.player2;
     } else {
       console.log('No shooter');
@@ -462,9 +467,9 @@ export default class Play extends Phaser.Scene {
   }
 
   getRebounder() {
-    if (this.player1.isShooter) {
+    if (this.player1.data.get('isShooter')) {
       return this.player2;
-    } else if (this.player2.isShooter) {
+    } else if (this.player2.data.get('isShooter')) {
       return this.player1;
     } else {
       console.log('No rebounder');
@@ -472,7 +477,7 @@ export default class Play extends Phaser.Scene {
   }
 
   getPlayerIndex(player) {
-    return player.playerNum - 1;
+    return player.data.get('playerNum') - 1;
   }
 
   endShot() {
@@ -483,11 +488,15 @@ export default class Play extends Phaser.Scene {
     this.setPlayerPossession(shooter);
     shooter.x = this.shootingSpots[this.gameState.shootingSpotNum];
     rebounder.x = this.rebounderPosition;
-    const shooterPlayerKey = this.getPlayerKey(shooter.playerNum - 1);
+    const shooterPlayerKey = this.getPlayerKey(
+      shooter.data.get('playerNum') - 1
+    );
     const shooterScored =
       this.gameState.lastPossession === shooterPlayerKey &&
       this.gameState.justScored;
-    shooter.shotChart.push(shooterScored ? true : false);
+    const updatedShotChart = [...shooter.data.get('shotChart')];
+    updatedShotChart.push(shooterScored ? true : false);
+    shooter.data.set('shotChart', updatedShotChart);
     const playerIndex = this.getPlayerIndex(shooter);
     this.playerScoreText[playerIndex].text = this.getPlayerScoreText(shooter);
     this.resetShotState();
@@ -536,16 +545,16 @@ export default class Play extends Phaser.Scene {
   }
 
   getPlayerScoreText(player) {
-    const possessionSymbol = player.isShooter ? '🏀' : '🙌';
-    const shotChart = player.shotChart.reduce((chart, shot, i) => {
+    const possessionSymbol = player.data.get('isShooter') ? '🏀' : '🙌';
+    const shotChart = player.data.get('shotChart').reduce((chart, shot, i) => {
       const isMoneyBall = (i + 1) % 3 === 0;
       const ballSymbol = isMoneyBall ? '🏐' : '🏀';
       const thisShot = shot ? ballSymbol : '❌';
       const rackDivider = i === 3 || i === 6 ? '|' : '';
       return `${chart}${rackDivider}${thisShot}`;
     }, '');
-    return `${possessionSymbol} Player ${player.playerNum}: ${
-      this.gameState.score[player.playerNum - 1]
+    return `${possessionSymbol} Player ${player.data.get('playerNum')}: ${
+      this.gameState.score[player.data.get('playerNum') - 1]
     } ${shotChart}`;
   }
 
@@ -570,7 +579,8 @@ export default class Play extends Phaser.Scene {
     }
 
     const noOneHasPossession =
-      !this.player1.hasPossession && !this.player2.hasPossession;
+      !this.player1.data.get('hasPossession') &&
+      !this.player2.data.get('hasPossession');
     const isBallInTheCylinder =
       this.ball.body.x > this.frontRim.body.x &&
       this.ball.body.x < this.backRim.body.x;
@@ -591,7 +601,9 @@ export default class Play extends Phaser.Scene {
     }
 
     this.gameState.justScored = this.gameState.lastPossession;
-    const scorerPlayerNum = this[this.gameState.lastPossession].playerNum;
+    const scorerPlayerNum = this[this.gameState.lastPossession].data.get(
+      'playerNum'
+    );
     return scorerPlayerNum;
   }
 
@@ -613,8 +625,8 @@ export default class Play extends Phaser.Scene {
       !this.ball.body.wasTouching.down &&
       this.ball.body.touching.down &&
       isAtGroundHeight &&
-      !this.player1.hasPossession &&
-      !this.player2.hasPossession;
+      !this.player1.data.get('hasPossession') &&
+      !this.player2.data.get('hasPossession');
     if (ballBounced && this.gameState.soundOn) {
       this.soundEffects.ballBounce.play();
     }
@@ -632,31 +644,31 @@ export default class Play extends Phaser.Scene {
 
   setPlayerPossession(player) {
     if (!player) {
-      this.player1.hasPossession = false;
-      this.player2.hasPossession = false;
+      this.player1.data.set('hasPossession', false);
+      this.player2.data.set('hasPossession', false);
       this.gameState.lastPossession = null;
       return;
     }
 
-    player.hasPossession = true;
-    const playerKey = this.getPlayerKey(player.playerNum - 1);
+    player.data.set('hasPossession', true);
+    const playerKey = this.getPlayerKey(player.data.get('playerNum') - 1);
     this.gameState.lastPossession = playerKey;
     const otherPlayer = this.getOtherPlayer(player);
-    otherPlayer.hasPossession = false;
+    otherPlayer.data.set('hasPossession', false);
   }
 
   getPlayerPossession() {
-    if (this.player1.hasPossession) {
+    if (this.player1.data.get('hasPossession')) {
       return this.player1;
     }
-    if (this.player2.hasPossession) {
+    if (this.player2.data.get('hasPossession')) {
       return this.player2;
     }
     return;
   }
 
   getOtherPlayer(player) {
-    return this.players[(player.playerNum + 1) % 2];
+    return this.players[(player.data.get('playerNum') + 1) % 2];
   }
 
   ballRimCollision() {
