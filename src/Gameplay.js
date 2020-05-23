@@ -30,10 +30,6 @@ export default class Play extends Phaser.Scene {
       gravity: 1000,
       dropSpeed: 50,
     };
-    this.PLAYERS = {
-      PLAYER1: 'player1',
-      PLAYER2: 'player2',
-    };
 
     this.player1;
     this.player2;
@@ -447,10 +443,6 @@ export default class Play extends Phaser.Scene {
     player.data.set('hasPossession', false);
     this.ball.body.setVelocityX(this.getDropSpeed(player).x);
     this.ball.body.setVelocityY(this.getDropSpeed(player).y);
-  }
-
-  getPlayerKey(playerIndex) {
-    return Object.values(this.PLAYERS)[playerIndex];
   }
 
   getShooter() {
