@@ -370,7 +370,6 @@ export default class Play extends Phaser.Scene {
       this.shoot(this.player1);
 
       if (this.player1.data.get('isShooter')) {
-        this.gameState.shotReleased = true;
         // Each of these cases should set a 1 or 2 second timeout and then reset ball location or show final score/money ball status
         if (this.gameState.shotNum < 2) {
           // Next shot
@@ -435,12 +434,14 @@ export default class Play extends Phaser.Scene {
 
   shoot(player) {
     player.data.set('hasPossession', false);
+    this.gameState.shotReleased = true;
     this.ball.body.setVelocityX(this.getShotSpeed(player).x);
     this.ball.body.setVelocityY(this.getShotSpeed(player).y);
   }
 
   drop(player) {
     player.data.set('hasPossession', false);
+    this.gameState.shotReleased = true;
     this.ball.body.setVelocityX(this.getDropSpeed(player).x);
     this.ball.body.setVelocityY(this.getDropSpeed(player).y);
   }
@@ -604,15 +605,26 @@ export default class Play extends Phaser.Scene {
     const isAtGroundHeight =
       this.ball.x >
       this.court.y - this.court.body.halfHeight - this.player1.body.halfHeight;
+
     const ballBounced =
       !this.ball.body.wasTouching.down &&
       this.ball.body.touching.down &&
       isAtGroundHeight &&
       !this.player1.data.get('hasPossession') &&
       !this.player2.data.get('hasPossession');
-    if (ballBounced && this.gameState.soundOn) {
+
+    if (!ballBounced && this.gameState.soundOn) {
+      return;
+    }
+
+    if (this.gameState.soundOn) {
       this.soundEffects.ballBounce.play();
     }
+
+    if (this.gameState.shotReleased) {
+      this.gameState.ballHitGround = true;
+    }
+
     // Ball friction on court
     if (this.ball.body.velocity.x > 0) {
       this.ball.body.setVelocityX(
