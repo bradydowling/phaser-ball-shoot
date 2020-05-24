@@ -348,12 +348,11 @@ export default class Play extends Phaser.Scene {
 
     const scorer = this.getScorer();
     if (scorer) {
-      this.startShotEnd();
       const scorerIndex = this.getPlayerIndex(scorer);
-      const pointsScored = this.gameState.shotNum === 2 ? 2 : 1;
-      console.log(`Scored ${pointsScored}`);
+      const pointsScored = this.getPointsScored(scorer);
       this.gameState.score[scorerIndex] =
         this.gameState.score[scorerIndex] + pointsScored;
+      this.startShotEnd();
     }
 
     // Ball placement (possession)
@@ -412,6 +411,14 @@ export default class Play extends Phaser.Scene {
     }
   }
 
+  getPointsScored(scorer) {
+    const isMoneyBall = this.gameState.shotNum === 2;
+    if (scorer.data.get('isShooter') && isMoneyBall) {
+      return 2;
+    }
+    return 1;
+  }
+
   shoot(player) {
     player.data.set('hasPossession', false);
     this.gameState.shotReleased = true;
@@ -455,6 +462,8 @@ export default class Play extends Phaser.Scene {
       return;
     }
 
+    this.updateScoreboard();
+
     if (this.gameState.shotNum < 2) {
       // Next shot
       this.gameState.shotNum = this.gameState.shotNum + 1;
@@ -479,6 +488,19 @@ export default class Play extends Phaser.Scene {
     }, 1000);
   }
 
+  updateScoreboard() {
+    const shooter = this.getShooter();
+    const shooterScored =
+      this.gameState.lastPossession === shooter.name &&
+      this.gameState.justScored;
+
+    const updatedShotChart = [...shooter.data.get('shotChart')];
+    updatedShotChart.push(shooterScored ? true : false);
+    shooter.data.set('shotChart', updatedShotChart);
+    this.playerScoreText[0].text = this.getPlayerScoreText(this.player1);
+    this.playerScoreText[1].text = this.getPlayerScoreText(this.player2);
+  }
+
   endShot() {
     this.shotOverText.setVisible(false);
 
@@ -487,17 +509,6 @@ export default class Play extends Phaser.Scene {
     this.setPlayerPossession(shooter);
     shooter.x = this.shootingSpots[this.gameState.shootingSpotNum];
     rebounder.x = this.rebounderPosition;
-    const shooterScored =
-      this.gameState.lastPossession === shooter.name &&
-      this.gameState.justScored;
-
-    // Start: Could move this part to startEndShot()
-    const updatedShotChart = [...shooter.data.get('shotChart')];
-    updatedShotChart.push(shooterScored ? true : false);
-    shooter.data.set('shotChart', updatedShotChart);
-    const playerIndex = this.getPlayerIndex(shooter);
-    this.playerScoreText[playerIndex].text = this.getPlayerScoreText(shooter);
-    // End: Could move this part to startEndShot()
 
     this.resetShotState();
 
