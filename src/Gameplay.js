@@ -58,6 +58,8 @@ export default class Play extends Phaser.Scene {
       gameOver: false,
       canRebounderScore: true,
       soundOn: true,
+      canScore: true,
+      rebounderGrounded: false,
     };
   }
 
@@ -279,6 +281,19 @@ export default class Play extends Phaser.Scene {
     this.gameOverText.setVisible(false);
     this.gameOverText.setOrigin(0.5);
 
+    this.shotOverText = this.add.text(
+      this.physics.world.bounds.width * 0.5,
+      this.physics.world.bounds.height * 0.4,
+      'Shot over!',
+      {
+        fontFamily: 'Monaco, Courier, monospace',
+        fontSize: '20px',
+        fill: '#fff',
+      }
+    );
+    this.shotOverText.setVisible(false);
+    this.shotOverText.setOrigin(0.5);
+
     this.physics.add.collider(
       this.player1,
       this.ball,
@@ -327,6 +342,21 @@ export default class Play extends Phaser.Scene {
       this.toggleSound();
     }
 
+    if (this.gameState.shotReleased && this.gameState.ballHitGround) {
+      this.startShotEnd();
+    }
+
+    const scorer = this.getScorer();
+    if (scorer) {
+      this.startShotEnd();
+      const scorerIndex = this.getPlayerIndex(scorer);
+      const pointsScored = this.gameState.shotNum === 2 ? 2 : 1;
+      console.log(`Scored ${pointsScored}`);
+      this.gameState.score[scorerIndex] =
+        this.gameState.score[scorerIndex] + pointsScored;
+    }
+
+    // Ball placement (possession)
     if (this.player1.data.get('hasPossession')) {
       const ballPos = this.getBallRelativeToShooter(this.ball, this.player1);
       this.ball.body.x = ballPos.x;
@@ -337,19 +367,7 @@ export default class Play extends Phaser.Scene {
       this.ball.body.y = ballPos.y;
     }
 
-    if (!this.gameState.justScored) {
-      const scorer = this.getScorer();
-      if (scorer) {
-        const scorerIndex = this.getPlayerIndex(scorer);
-        const pointsScored = this.gameState.shotNum === 0 ? 2 : 1;
-        this.gameState.score[scorerIndex] =
-          this.gameState.score[scorerIndex] + pointsScored;
-        this.playerScoreText[scorerIndex].text = this.getPlayerScoreText(
-          this[scorer.name]
-        );
-      }
-    }
-
+    // Player movement
     this.player1.body.setVelocityX(0);
     if (
       this.keys.a.isDown &&
@@ -368,27 +386,6 @@ export default class Play extends Phaser.Scene {
     }
     if (this.keys.space.isDown && this.player1.data.get('hasPossession')) {
       this.shoot(this.player1);
-
-      if (this.player1.data.get('isShooter')) {
-        // Each of these cases should set a 1 or 2 second timeout and then reset ball location or show final score/money ball status
-        if (this.gameState.shotNum < 2) {
-          // Next shot
-          this.gameState.shotNum = this.gameState.shotNum + 1;
-        } else if (this.gameState.shootingSpotNum < 2) {
-          // Next rack
-          this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
-          this.gameState.shotNum = 0;
-        } else if (this.player1.data.get('isShooter')) {
-          // Next shooter
-          this.player1.data.set('isShooter', false);
-          this.player2.data.set('isShooter', true);
-          this.gameState.shootingSpotNum = 0;
-          this.gameState.shotNum = 0;
-        }
-        setTimeout(() => {
-          this.endShot();
-        }, 2500);
-      }
     }
 
     this.player2.body.setVelocityX(0);
@@ -412,23 +409,6 @@ export default class Play extends Phaser.Scene {
     }
     if (this.keys.shift.isDown && this.player2.data.get('hasPossession')) {
       this.shoot(this.player2);
-
-      if (this.player2.data.get('isShooter')) {
-        this.gameState.shotReleased = true;
-        if (this.gameState.shotNum < 2) {
-          // Next shot
-          this.gameState.shotNum = this.gameState.shotNum + 1;
-        } else if (this.gameState.shootingSpotNum < 2) {
-          // Next rack
-          this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
-          this.gameState.shotNum = 0;
-        } else {
-          this.gameState.gameOver = true;
-        }
-        setTimeout(() => {
-          this.endShot();
-        }, 2000);
-      }
     }
   }
 
@@ -470,8 +450,37 @@ export default class Play extends Phaser.Scene {
     return player.data.get('playerNum') - 1;
   }
 
+  startShotEnd() {
+    if (!this.gameState.canScore) {
+      return;
+    }
+
+    if (this.gameState.shotNum < 2) {
+      // Next shot
+      this.gameState.shotNum = this.gameState.shotNum + 1;
+    } else if (this.gameState.shootingSpotNum < 2) {
+      // Next rack
+      this.gameState.shootingSpotNum = this.gameState.shootingSpotNum + 1;
+      this.gameState.shotNum = 0;
+    } else if (this.player1.data.get('isShooter')) {
+      // Next shooter
+      this.player1.data.set('isShooter', false);
+      this.player2.data.set('isShooter', true);
+      this.gameState.shootingSpotNum = 0;
+      this.gameState.shotNum = 0;
+    } else {
+      this.gameState.gameOver = true;
+    }
+
+    this.gameState.canScore = false;
+    this.shotOverText.setVisible(true);
+    setTimeout(() => {
+      this.endShot();
+    }, 1000);
+  }
+
   endShot() {
-    this.setPlayerPossession(false);
+    this.shotOverText.setVisible(false);
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
@@ -481,11 +490,15 @@ export default class Play extends Phaser.Scene {
     const shooterScored =
       this.gameState.lastPossession === shooter.name &&
       this.gameState.justScored;
+
+    // Start: Could move this part to startEndShot()
     const updatedShotChart = [...shooter.data.get('shotChart')];
     updatedShotChart.push(shooterScored ? true : false);
     shooter.data.set('shotChart', updatedShotChart);
     const playerIndex = this.getPlayerIndex(shooter);
     this.playerScoreText[playerIndex].text = this.getPlayerScoreText(shooter);
+    // End: Could move this part to startEndShot()
+
     this.resetShotState();
 
     if (!this.gameState.gameOver) {
@@ -505,6 +518,8 @@ export default class Play extends Phaser.Scene {
     this.gameState.shotReleased = false;
     this.gameState.ballHitGround = false;
     this.gameState.hasRebounded = false;
+    this.gameState.canScore = true;
+    this.gameState.rebounderGrounded = false;
   }
 
   getBallRelativeToShooter(ball, player) {
@@ -546,7 +561,7 @@ export default class Play extends Phaser.Scene {
   }
 
   getScorer() {
-    if (this.gameState.gameOver) {
+    if (this.gameState.gameOver || !this.gameState.canScore) {
       return false;
     }
 
@@ -592,6 +607,10 @@ export default class Play extends Phaser.Scene {
   }
 
   playerCourtCollision(player, court) {
+    if (!player.data.get('isShooter') && this.gameState.hasRebounded) {
+      this.gameState.rebounderGrounded = true;
+    }
+
     if (player.body.y > this.court.body.y - player.body.height / 2) {
       player.body.y = this.court.body.y - player.body.height;
       this.brokenAnkleText.setVisible(true);
@@ -603,7 +622,7 @@ export default class Play extends Phaser.Scene {
 
   courtBallCollision(court, ball) {
     const isAtGroundHeight =
-      this.ball.x >
+      this.ball.y >
       this.court.y - this.court.body.halfHeight - this.player1.body.halfHeight;
 
     const ballBounced =
@@ -613,7 +632,7 @@ export default class Play extends Phaser.Scene {
       !this.player1.data.get('hasPossession') &&
       !this.player2.data.get('hasPossession');
 
-    if (!ballBounced && this.gameState.soundOn) {
+    if (!ballBounced) {
       return;
     }
 
@@ -621,7 +640,7 @@ export default class Play extends Phaser.Scene {
       this.soundEffects.ballBounce.play();
     }
 
-    if (this.gameState.shotReleased) {
+    if (this.gameState.shotReleased && !this.gameState.ballHitGround) {
       this.gameState.ballHitGround = true;
     }
 
@@ -643,6 +662,17 @@ export default class Play extends Phaser.Scene {
       this.player2.data.set('hasPossession', false);
       this.gameState.lastPossession = null;
       return;
+    }
+
+    if (
+      (this.gameState.hasRebounded && !player.data.get('hasPossession')) ||
+      this.gameState.rebounderGrounded
+    ) {
+      this.startShotEnd();
+    }
+
+    if (!player.data.get('isShooter')) {
+      this.gameState.hasRebounded = true;
     }
 
     player.data.set('hasPossession', true);
