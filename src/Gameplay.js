@@ -40,7 +40,10 @@ export default class Play extends Phaser.Scene {
     this.frontRim;
     this.backRim;
     this.shootingSpots = [0, 0, 0];
-    this.soundEffects = {};
+    this.soundEffects = {
+      rimBounce: null,
+      ballBounce: null,
+    };
     this.debouncingSoundToggle = false;
 
     this.texts = {
@@ -329,8 +332,15 @@ export default class Play extends Phaser.Scene {
       this.ball,
       this.setPlayerPossession.bind(this)
     );
-    this.physics.add.collider(this.ball, this.backboard);
+    this.physics.add.collider(
+      this.ball,
+      this.backboard,
+      this.ballBackboardCollision.bind(this)
+    );
+    this.physics.add.collider(this.player1, this.frontRim);
+    this.physics.add.collider(this.player1, this.backboard);
     this.physics.add.collider(this.player2, this.frontRim);
+    this.physics.add.collider(this.player2, this.backboard);
     this.physics.add.collider(
       this.ball,
       this.frontRim,
@@ -356,7 +366,10 @@ export default class Play extends Phaser.Scene {
       this.toggleSound();
     }
 
-    if (this.gameState.shotReleased && this.gameState.ballHitGround) {
+    if (
+      this.gameState.shotReleased &&
+      (this.gameState.ballHitGround || this.gameState.rebounderGrounded)
+    ) {
       this.startShotEnd();
     }
 
@@ -475,7 +488,6 @@ export default class Play extends Phaser.Scene {
     if (!this.gameState.canScore) {
       return;
     }
-    console.log('beginning of the end');
 
     this.updateScoreboard();
 
@@ -517,9 +529,8 @@ export default class Play extends Phaser.Scene {
   }
 
   endShot() {
-    console.log('the end');
     this.texts.shotState.setVisible(false);
-    this.texts.shotState.text = 'Shot over!';
+    this.texts.shotState.text = 'No bucket';
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
@@ -713,7 +724,6 @@ export default class Play extends Phaser.Scene {
   }
 
   setPlayerPossession(player) {
-    console.log(player.name);
     if (!player) {
       this.player1.data.set('hasPossession', false);
       this.player2.data.set('hasPossession', false);
@@ -726,13 +736,6 @@ export default class Play extends Phaser.Scene {
       this.texts.shotState.text = 'Goaltending!';
       this.texts.shotState.setVisible(true);
       return;
-    }
-
-    const didReboundTwice =
-      this.gameState.hasRebounded && !player.data.get('hasPossession');
-
-    if (didReboundTwice || this.gameState.rebounderGrounded) {
-      this.startShotEnd();
     }
 
     if (!player.data.get('isShooter')) {
@@ -756,6 +759,14 @@ export default class Play extends Phaser.Scene {
       return;
     }
     this.soundEffects.rimBounce.play();
+  }
+
+  ballBackboardCollision() {
+    this.gameState.hasBallTouchedRimOrRebounder = true;
+    if (!this.gameState.soundOn) {
+      return;
+    }
+    this.soundEffects.ballBounce.play;
   }
 
   toggleSound() {
