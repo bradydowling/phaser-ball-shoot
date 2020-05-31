@@ -43,6 +43,10 @@ export default class Play extends Phaser.Scene {
     this.shootingSpots = [0, 0, 0];
     this.soundEffects = {};
 
+    this.textObjects = {
+      shotState: null,
+    };
+
     this.gameState = {
       gameStarted: false,
       lastPossession: null,
@@ -282,7 +286,7 @@ export default class Play extends Phaser.Scene {
     this.gameOverText.setVisible(false);
     this.gameOverText.setOrigin(0.5);
 
-    this.shotOverText = this.add.text(
+    this.textObjects.shotState = this.add.text(
       this.physics.world.bounds.width * 0.5,
       this.physics.world.bounds.height * 0.4,
       'Shot over!',
@@ -292,8 +296,8 @@ export default class Play extends Phaser.Scene {
         fill: '#fff',
       }
     );
-    this.shotOverText.setVisible(false);
-    this.shotOverText.setOrigin(0.5);
+    this.textObjects.shotState.setVisible(false);
+    this.textObjects.shotState.setOrigin(0.5);
 
     this.physics.add.collider(
       this.player1,
@@ -483,7 +487,7 @@ export default class Play extends Phaser.Scene {
     }
 
     this.gameState.canScore = false;
-    this.shotOverText.setVisible(true);
+    this.textObjects.shotState.setVisible(true);
     setTimeout(() => {
       this.endShot();
     }, 1000);
@@ -503,7 +507,8 @@ export default class Play extends Phaser.Scene {
   }
 
   endShot() {
-    this.shotOverText.setVisible(false);
+    this.textObjects.shotState.setVisible(false);
+    this.textObjects.shotState.text = 'Shot over!';
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
@@ -701,6 +706,8 @@ export default class Play extends Phaser.Scene {
 
     if (this.isGoaltending()) {
       this.gameState.isGoaltending = true;
+      this.textObjects.shotState.text = 'Goaltending!';
+      this.textObjects.shotState.setVisible(true);
       return;
     }
 
