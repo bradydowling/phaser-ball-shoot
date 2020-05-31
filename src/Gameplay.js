@@ -60,6 +60,7 @@ export default class Play extends Phaser.Scene {
       soundOn: true,
       canScore: true,
       rebounderGrounded: false,
+      hasBallTouchedRimOrRebounder: false,
     };
   }
 
@@ -531,6 +532,8 @@ export default class Play extends Phaser.Scene {
     this.gameState.hasRebounded = false;
     this.gameState.canScore = true;
     this.gameState.rebounderGrounded = false;
+    this.gameState.hasBallTouchedRimOrRebounder = false;
+    this.gameState.isGoaltending = false;
   }
 
   getBallRelativeToShooter(ball, player) {
@@ -589,6 +592,12 @@ export default class Play extends Phaser.Scene {
       }, 200);
 
       return false;
+    }
+
+    if (this.gameState.isGoaltending) {
+      const scorer = this.getShooter();
+      this.gameState.justScored = scorer.name;
+      return scorer;
     }
 
     const noOneHasPossession =
@@ -667,7 +676,22 @@ export default class Play extends Phaser.Scene {
     }
   }
 
+  isGoaltending() {
+    const isBallComingDown = this.ball.body.velocity.y < 0;
+    const isBallAboveRim = this.ball.body.y < this.frontRim.body.y;
+    const isGoaltending =
+      !this.gameState.hasBallTouchedRimOrRebounder &&
+      isBallAboveRim &&
+      isBallComingDown;
+    const isBlockedShot =
+      !this.gameState.hasBallTouchedRimOrRebounder &&
+      isBallComingDown &&
+      this.ball.body.x < this.physics.world.bounds.width * 0.6;
+    return isBlockedShot || isGoaltending;
+  }
+
   setPlayerPossession(player) {
+    console.log(player.name);
     if (!player) {
       this.player1.data.set('hasPossession', false);
       this.player2.data.set('hasPossession', false);
@@ -675,10 +699,15 @@ export default class Play extends Phaser.Scene {
       return;
     }
 
-    if (
-      (this.gameState.hasRebounded && !player.data.get('hasPossession')) ||
-      this.gameState.rebounderGrounded
-    ) {
+    if (this.isGoaltending()) {
+      this.gameState.isGoaltending = true;
+      return;
+    }
+
+    const didReboundTwice =
+      this.gameState.hasRebounded && !player.data.get('hasPossession');
+
+    if (didReboundTwice || this.gameState.rebounderGrounded) {
       this.startShotEnd();
     }
 
@@ -708,6 +737,7 @@ export default class Play extends Phaser.Scene {
   }
 
   ballRimCollision() {
+    this.gameState.hasBallTouchedRimOrRebounder = true;
     if (!this.gameState.soundOn) {
       return;
     }
