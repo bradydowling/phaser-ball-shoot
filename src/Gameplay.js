@@ -39,12 +39,18 @@ export default class Play extends Phaser.Scene {
     this.backboard;
     this.frontRim;
     this.backRim;
-    this.playerScoreText = [];
     this.shootingSpots = [0, 0, 0];
     this.soundEffects = {};
+    this.debouncingSoundToggle = false;
 
-    this.textObjects = {
+    this.texts = {
       shotState: null,
+      playerScore: [],
+    };
+
+    this.timeouts = {
+      wasAboveRim: null,
+      changedPossession: null,
     };
 
     this.gameState = {
@@ -52,7 +58,6 @@ export default class Play extends Phaser.Scene {
       lastPossession: null,
       score: [0, 0],
       wasAboveRim: false,
-      wasAboveRimTimeout: null,
       justScored: false,
       shotReleased: false,
       ballHitGround: false,
@@ -230,13 +235,13 @@ export default class Play extends Phaser.Scene {
       fill: '#fff',
     });
 
-    this.playerScoreText[0] = this.add.text(20, 50, '🏀 Player 1: 0', {
+    this.texts.playerScore[0] = this.add.text(20, 50, '🏀 Player 1: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
     });
 
-    this.playerScoreText[1] = this.add.text(20, 75, '🙌 Player 2: 0', {
+    this.texts.playerScore[1] = this.add.text(20, 75, '🙌 Player 2: 0', {
       fontFamily: 'Monaco, Courier, monospace',
       fontSize: '20px',
       fill: '#fff',
@@ -286,7 +291,7 @@ export default class Play extends Phaser.Scene {
     this.gameOverText.setVisible(false);
     this.gameOverText.setOrigin(0.5);
 
-    this.textObjects.shotState = this.add.text(
+    this.texts.shotState = this.add.text(
       this.physics.world.bounds.width * 0.5,
       this.physics.world.bounds.height * 0.4,
       'Shot over!',
@@ -296,8 +301,8 @@ export default class Play extends Phaser.Scene {
         fill: '#fff',
       }
     );
-    this.textObjects.shotState.setVisible(false);
-    this.textObjects.shotState.setOrigin(0.5);
+    this.texts.shotState.setVisible(false);
+    this.texts.shotState.setOrigin(0.5);
 
     this.physics.add.collider(
       this.player1,
@@ -331,7 +336,11 @@ export default class Play extends Phaser.Scene {
       this.frontRim,
       this.ballRimCollision.bind(this)
     );
-    this.physics.add.collider(this.ball, this.backRim);
+    this.physics.add.collider(
+      this.ball,
+      this.backRim,
+      this.ballRimCollision.bind(this)
+    );
     this.physics.add.collider(this.player1, this.backboard);
     // this.physics.add.collider(this.player1, this.halfcourt);
 
@@ -466,6 +475,7 @@ export default class Play extends Phaser.Scene {
     if (!this.gameState.canScore) {
       return;
     }
+    console.log('beginning of the end');
 
     this.updateScoreboard();
 
@@ -487,7 +497,7 @@ export default class Play extends Phaser.Scene {
     }
 
     this.gameState.canScore = false;
-    this.textObjects.shotState.setVisible(true);
+    this.texts.shotState.setVisible(true);
     setTimeout(() => {
       this.endShot();
     }, 1000);
@@ -502,13 +512,14 @@ export default class Play extends Phaser.Scene {
     const updatedShotChart = [...shooter.data.get('shotChart')];
     updatedShotChart.push(shooterScored ? true : false);
     shooter.data.set('shotChart', updatedShotChart);
-    this.playerScoreText[0].text = this.getPlayerScoreText(this.player1);
-    this.playerScoreText[1].text = this.getPlayerScoreText(this.player2);
+    this.texts.playerScore[0].text = this.getPlayerScoreText(this.player1);
+    this.texts.playerScore[1].text = this.getPlayerScoreText(this.player2);
   }
 
   endShot() {
-    this.textObjects.shotState.setVisible(false);
-    this.textObjects.shotState.text = 'Shot over!';
+    console.log('the end');
+    this.texts.shotState.setVisible(false);
+    this.texts.shotState.text = 'Shot over!';
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
@@ -588,11 +599,11 @@ export default class Play extends Phaser.Scene {
     if (isAboveTheRim) {
       this.wasAboveRim = true;
 
-      if (this.wasAboveRimTimeout) {
-        clearTimeout(this.wasAboveRimTimeout);
+      if (this.timeouts.wasAboveRim) {
+        clearTimeout(this.timeouts.wasAboveRim);
       }
 
-      this.wasAboveRimTimeout = setTimeout(() => {
+      this.timeouts.wasAboveRim = setTimeout(() => {
         this.wasAboveRim = false;
       }, 200);
 
@@ -628,7 +639,13 @@ export default class Play extends Phaser.Scene {
     }
 
     this.gameState.justScored = this.gameState.lastPossession;
-    return this[this.gameState.lastPossession];
+    const scorer = this[this.gameState.lastPossession];
+    if (scorer.data.get('isShooter')) {
+      this.texts.shotState.text = 'Get buckets!';
+    } else {
+      this.texts.shotState.text = 'Nice tip!';
+    }
+    return scorer;
   }
 
   playerCourtCollision(player, court) {
@@ -706,8 +723,8 @@ export default class Play extends Phaser.Scene {
 
     if (this.isGoaltending()) {
       this.gameState.isGoaltending = true;
-      this.textObjects.shotState.text = 'Goaltending!';
-      this.textObjects.shotState.setVisible(true);
+      this.texts.shotState.text = 'Goaltending!';
+      this.texts.shotState.setVisible(true);
       return;
     }
 
@@ -726,16 +743,6 @@ export default class Play extends Phaser.Scene {
     this.gameState.lastPossession = player.name;
     const otherPlayer = this.getOtherPlayer(player);
     otherPlayer.data.set('hasPossession', false);
-  }
-
-  getPlayerPossession() {
-    if (this.player1.data.get('hasPossession')) {
-      return this.player1;
-    }
-    if (this.player2.data.get('hasPossession')) {
-      return this.player2;
-    }
-    return;
   }
 
   getOtherPlayer(player) {
