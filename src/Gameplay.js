@@ -8,6 +8,7 @@ import rimImg from './assets/front-rim.png';
 import netImg from './assets/net.png';
 import rimBounceSound from './assets/rim-bounce.m4a';
 import ballBounceSound from './assets/ball-bounce.m4a';
+import swishSound1 from './assets/swish.mp3';
 
 export default class Play extends Phaser.Scene {
   constructor() {
@@ -43,6 +44,7 @@ export default class Play extends Phaser.Scene {
     this.soundEffects = {
       rimBounce: null,
       ballBounce: null,
+      swish1: null,
     };
     this.debouncingSoundToggle = false;
 
@@ -86,6 +88,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('net', netImg);
     this.load.audio('rim-bounce', rimBounceSound);
     this.load.audio('ball-bounce', ballBounceSound);
+    this.load.audio('swish1', swishSound1);
   }
 
   create() {
@@ -359,6 +362,7 @@ export default class Play extends Phaser.Scene {
 
     this.soundEffects.rimBounce = this.sound.add('rim-bounce');
     this.soundEffects.ballBounce = this.sound.add('ball-bounce');
+    this.soundEffects.swish1 = this.sound.add('swish1');
   }
 
   update() {
@@ -379,6 +383,7 @@ export default class Play extends Phaser.Scene {
       const pointsScored = this.getPointsScored(scorer);
       this.gameState.score[scorerIndex] =
         this.gameState.score[scorerIndex] + pointsScored;
+      this.soundEffects.swish1.play();
       this.startShotEnd();
     }
 
@@ -652,11 +657,48 @@ export default class Play extends Phaser.Scene {
     this.gameState.justScored = this.gameState.lastPossession;
     const scorer = this[this.gameState.lastPossession];
     if (scorer.data.get('isShooter')) {
-      this.texts.shotState.text = 'Get buckets!';
+      this.texts.shotState.text = this.getShooterScoreMessage();
     } else {
-      this.texts.shotState.text = 'Nice tip!';
+      this.texts.shotState.text = this.getTipInMessage();
     }
     return scorer;
+  }
+
+  getShooterScoreMessage() {
+    const messages = [
+      'Get buckets!',
+      'Lessssgooo big shooter!',
+      '💸 Cash 💸',
+      'Butter!',
+      'Rain drops!!',
+      'Stroking it',
+      'Straight cash homie!',
+      'Sharp shooter 👏',
+      'Dials that number!',
+      "Kid can't miss!",
+      'Biscuit in the basket!',
+      'Water!',
+      'Kid is a bucket',
+    ];
+    const base = messages.length - 1;
+    const i = Math.round(Math.random() * (messages.length - 1));
+    console.log(i);
+    return messages[i];
+  }
+
+  getTipInMessage() {
+    const messages = [
+      'Nice tip!',
+      'Great tip in!',
+      'Cleaning the boards 💪',
+      'Board + bucket',
+      'The put back!!',
+      "The illin' TIP!",
+      'Scoring on defense 😏',
+      '2nd chance points!',
+      'Tips 🤲',
+    ];
+    return messages[Math.round(Math.random() * (messages.length - 1))];
   }
 
   playerCourtCollision(player, court) {
