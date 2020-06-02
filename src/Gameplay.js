@@ -8,7 +8,7 @@ import rimImg from './assets/front-rim.png';
 import netImg from './assets/net.png';
 import rimBounceSound from './assets/rim-bounce.m4a';
 import ballBounceSound from './assets/ball-bounce.m4a';
-import swishSound1 from './assets/swish.mp3';
+import swishSound1 from './assets/swish.m4a';
 
 export default class Play extends Phaser.Scene {
   constructor() {
@@ -360,8 +360,11 @@ export default class Play extends Phaser.Scene {
     this.setPlayerPossession(this.player1);
 
     this.soundEffects.rimBounce = this.sound.add('rim-bounce');
+    this.soundEffects.rimBounce.setVolume(0.5);
     this.soundEffects.ballBounce = this.sound.add('ball-bounce');
+    this.soundEffects.ballBounce.setVolume(0.5);
     this.soundEffects.swish1 = this.sound.add('swish1');
+    this.soundEffects.swish1.setVolume(0.5);
   }
 
   update() {
