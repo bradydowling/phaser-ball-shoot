@@ -61,7 +61,6 @@ export default class Play extends Phaser.Scene {
     this.gameState = {
       gameStarted: false,
       lastPossession: null,
-      score: [0, 0],
       wasAboveRim: false,
       justScored: false,
       shotReleased: false,
@@ -379,10 +378,6 @@ export default class Play extends Phaser.Scene {
 
     const scorer = this.getScorer();
     if (scorer) {
-      const scorerIndex = this.getPlayerIndex(scorer);
-      const pointsScored = this.getPointsScored(scorer);
-      this.gameState.score[scorerIndex] =
-        this.gameState.score[scorerIndex] + pointsScored;
       this.soundEffects.swish1.play();
       this.startShotEnd();
     }
@@ -533,6 +528,16 @@ export default class Play extends Phaser.Scene {
     this.texts.playerScore[1].text = this.getPlayerScoreText(this.player2);
   }
 
+  getPlayerPoints(playerIndex) {
+    const player = this.players[playerIndex];
+    const points = player.data.get('shotChart').reduce((points, shot, i) => {
+      const isMoneyBall = (i + 1) % 3 === 0;
+      const shotValue = isMoneyBall ? 2 : 1;
+      return points + shotValue;
+    }, 0);
+    return points;
+  }
+
   endShot() {
     this.texts.shotState.setVisible(false);
     this.texts.shotState.text = 'No bucket';
@@ -549,9 +554,11 @@ export default class Play extends Phaser.Scene {
       return;
     }
 
-    if (this.gameState.score[0] > this.gameState.score[1]) {
+    const player1score = this.getPlayerPoints(0);
+    const player2score = this.getPlayerPoints(1);
+    if (player1score > player2score) {
       this.gameOverText.text = 'Player 1 wins!!';
-    } else if (this.gameState.score[1] > this.gameState.score[0]) {
+    } else if (player2score > player1score) {
       this.gameOverText.text = 'Player 2 wins!!';
     }
     this.gameOverText.setVisible(true);
@@ -594,16 +601,21 @@ export default class Play extends Phaser.Scene {
 
   getPlayerScoreText(player) {
     const possessionSymbol = player.data.get('isShooter') ? '🏀' : '🙌';
-    const shotChart = player.data.get('shotChart').reduce((chart, shot, i) => {
+    const points = this.getPlayerPoints(this.getPlayerIndex(player));
+    const shotChart = this.getShotChart(player);
+    return `${possessionSymbol} Player ${player.data.get(
+      'playerNum'
+    )}: ${points} ${shotChart}`;
+  }
+
+  getShotChart(player) {
+    return player.data.get('shotChart').reduce((chart, shot, i) => {
       const isMoneyBall = (i + 1) % 3 === 0;
       const ballSymbol = isMoneyBall ? '🏐' : '🏀';
       const thisShot = shot ? ballSymbol : '❌';
       const rackDivider = i === 3 || i === 6 ? '|' : '';
       return `${chart}${rackDivider}${thisShot}`;
     }, '');
-    return `${possessionSymbol} Player ${player.data.get('playerNum')}: ${
-      this.gameState.score[player.data.get('playerNum') - 1]
-    } ${shotChart}`;
   }
 
   getScorer() {
@@ -680,10 +692,7 @@ export default class Play extends Phaser.Scene {
       'Water!',
       'Kid is a bucket',
     ];
-    const base = messages.length - 1;
-    const i = Math.round(Math.random() * (messages.length - 1));
-    console.log(i);
-    return messages[i];
+    return messages[Math.round(Math.random() * (messages.length - 1))];
   }
 
   getTipInMessage() {
