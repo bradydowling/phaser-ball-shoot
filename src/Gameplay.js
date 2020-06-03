@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import ballImg from './assets/ball.png';
+import crowdImg from './assets/crowd.png';
 import playerImg from './assets/paddle.png';
 import player2Img from './assets/paddle-2.png';
 import courtImg from './assets/court.png';
@@ -79,6 +80,7 @@ export default class Play extends Phaser.Scene {
 
   preload() {
     this.load.image('ball', ballImg);
+    this.load.image('crowd', crowdImg);
     this.load.image('player', playerImg);
     this.load.image('player2', player2Img);
     this.load.image('court', courtImg);
@@ -91,6 +93,9 @@ export default class Play extends Phaser.Scene {
   }
 
   create() {
+    // const background = this.add.tileSprite(0, 0, 1600, 1080, 'crowd');
+    // background.tilePositionX = 0.5;
+    // background.alpha = 0.5;
     const shootingSpotBase = this.physics.world.bounds.width / 8;
     this.shootingSpots = this.shootingSpots.map((spot, i, spots) => {
       return shootingSpotBase * (spots.length - i);
