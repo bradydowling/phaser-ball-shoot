@@ -93,9 +93,9 @@ export default class Play extends Phaser.Scene {
   }
 
   create() {
-    // const background = this.add.tileSprite(0, 0, 1600, 1080, 'crowd');
-    // background.tilePositionX = 0.5;
-    // background.alpha = 0.5;
+    const background = this.add.tileSprite(0, 0, 1600, 1080, 'crowd');
+    background.tilePositionX = 0.5;
+    background.alpha = 0.5;
     const shootingSpotBase = this.physics.world.bounds.width / 8;
     this.shootingSpots = this.shootingSpots.map((spot, i, spots) => {
       return shootingSpotBase * (spots.length - i);
