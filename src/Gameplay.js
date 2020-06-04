@@ -11,6 +11,22 @@ import rimBounceSound from './assets/rim-bounce.m4a';
 import ballBounceSound from './assets/ball-bounce.m4a';
 import swishSound1 from './assets/swish.m4a';
 
+const DEFAULT_GAME_STATE = {
+  lastPossession: null,
+  wasAboveRim: false,
+  justScored: false,
+  shotReleased: false,
+  ballHitGround: false,
+  hasRebounded: false,
+  shootingSpotNum: 0,
+  shotNum: 0,
+  gameOver: false,
+  soundOn: true,
+  canScore: true,
+  rebounderGrounded: false,
+  hasBallTouchedRimOrRebounder: false,
+};
+
 export default class Play extends Phaser.Scene {
   constructor() {
     super('gameplay');
@@ -59,23 +75,7 @@ export default class Play extends Phaser.Scene {
       changedPossession: null,
     };
 
-    this.gameState = {
-      gameStarted: false,
-      lastPossession: null,
-      wasAboveRim: false,
-      justScored: false,
-      shotReleased: false,
-      ballHitGround: false,
-      hasRebounded: false,
-      shootingSpotNum: 0,
-      shotNum: 0,
-      gameOver: false,
-      canRebounderScore: true,
-      soundOn: true,
-      canScore: true,
-      rebounderGrounded: false,
-      hasBallTouchedRimOrRebounder: false,
-    };
+    this.gameState = { ...DEFAULT_GAME_STATE };
   }
 
   preload() {
@@ -405,6 +405,12 @@ export default class Play extends Phaser.Scene {
 
     const scorer = this.getScorer();
     if (scorer) {
+      if (scorer.data.get('isShooter')) {
+        this.texts.shotState.text = this.getShooterScoreMessage();
+      } else {
+        this.texts.shotState.text = this.getTipInMessage();
+      }
+      this.gameState.justScored = scorer.name;
       this.soundEffects.swish1.play();
       this.startShotEnd();
     }
@@ -518,7 +524,7 @@ export default class Play extends Phaser.Scene {
   }
 
   startShotEnd() {
-    if (!this.gameState.canScore) {
+    if (!this.gameState.canScore || this.gameState.gameOver) {
       return;
     }
 
@@ -672,6 +678,7 @@ export default class Play extends Phaser.Scene {
   }
 
   getScorer() {
+    // Start: move outside of this function
     if (this.gameState.gameOver || !this.gameState.canScore) {
       return false;
     }
@@ -690,6 +697,7 @@ export default class Play extends Phaser.Scene {
 
       return false;
     }
+    // End: move outside of this function
 
     if (this.gameState.isGoaltending) {
       const scorer = this.getShooter();
@@ -719,13 +727,7 @@ export default class Play extends Phaser.Scene {
       return false;
     }
 
-    this.gameState.justScored = this.gameState.lastPossession;
     const scorer = this[this.gameState.lastPossession];
-    if (scorer.data.get('isShooter')) {
-      this.texts.shotState.text = this.getShooterScoreMessage();
-    } else {
-      this.texts.shotState.text = this.getTipInMessage();
-    }
     return scorer;
   }
 
