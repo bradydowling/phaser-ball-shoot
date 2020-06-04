@@ -119,6 +119,7 @@ export default class Play extends Phaser.Scene {
     this.player1.data.set('playerNum', 1);
     this.player1.data.set('hasPossession', true);
     this.player1.data.set('shotChart', []);
+    this.player1.data.set('tips', 0);
     this.players.push(this.player1);
 
     this.rebounderPosition = this.physics.world.bounds.width * 0.75;
@@ -139,6 +140,7 @@ export default class Play extends Phaser.Scene {
     this.player2.data.set('playerNum', 2);
     this.player2.data.set('hasPossession', false);
     this.player2.data.set('shotChart', []);
+    this.player2.data.set('tips', 0);
     this.players.push(this.player2);
 
     this.ball = this.physics.add.sprite(0, 0, 'ball');
@@ -547,6 +549,13 @@ export default class Play extends Phaser.Scene {
   }
 
   updateScoreboard() {
+    this.updateShooterScore();
+    this.updateRebounderScore();
+    this.texts.playerScore[0].text = this.getPlayerScoreText(this.player1);
+    this.texts.playerScore[1].text = this.getPlayerScoreText(this.player2);
+  }
+
+  updateShooterScore() {
     const shooter = this.getShooter();
     const shooterScored =
       this.gameState.lastPossession === shooter.name &&
@@ -555,19 +564,29 @@ export default class Play extends Phaser.Scene {
     const updatedShotChart = [...shooter.data.get('shotChart')];
     updatedShotChart.push(shooterScored ? true : false);
     shooter.data.set('shotChart', updatedShotChart);
-    this.texts.playerScore[0].text = this.getPlayerScoreText(this.player1);
-    this.texts.playerScore[1].text = this.getPlayerScoreText(this.player2);
+  }
+
+  updateRebounderScore() {
+    const rebounder = this.getRebounder();
+    const rebounderScored =
+      this.gameState.lastPossession === rebounder.name &&
+      this.gameState.justScored;
+
+    const tipsNum = rebounder.data.get('tips') + (rebounderScored ? 1 : 0);
+    rebounder.data.set('tips', tipsNum);
   }
 
   getPlayerPoints(playerIndex) {
     const player = this.players[playerIndex];
-    const points = player.data.get('shotChart').reduce((points, isMake, i) => {
-      const isMoneyBall = (i + 1) % 3 === 0;
-      const shotValue = isMoneyBall ? 2 : 1;
-      const pointsToAdd = isMake ? shotValue : 0;
-      return points + pointsToAdd;
-    }, 0);
-    return points;
+    const shotPoints = player.data
+      .get('shotChart')
+      .reduce((points, isMake, i) => {
+        const isMoneyBall = (i + 1) % 3 === 0;
+        const shotValue = isMoneyBall ? 2 : 1;
+        const pointsToAdd = isMake ? shotValue : 0;
+        return points + pointsToAdd;
+      }, 0);
+    return shotPoints + player.data.get('tips');
   }
 
   endShot() {
@@ -576,16 +595,18 @@ export default class Play extends Phaser.Scene {
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
-    this.handlePlayerBallCollision(shooter);
+    this.setPlayerPossession(shooter);
     shooter.x = this.shootingSpots[this.gameState.shootingSpotNum];
     rebounder.x = this.rebounderPosition;
 
     this.resetShotState();
 
-    if (!this.gameState.gameOver) {
-      return;
+    if (this.gameState.gameOver) {
+      this.showGameOverText();
     }
+  }
 
+  showGameOverText() {
     const player1score = this.getPlayerPoints(0);
     const player2score = this.getPlayerPoints(1);
     if (player1score > player2score) {
