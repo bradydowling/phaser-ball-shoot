@@ -437,11 +437,15 @@ export default class Play extends Phaser.Scene {
 
     if (this.keys.w.isDown && this.player1.body.touching.down) {
       this.player1.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
-    } else if (this.keys.s.isDown && this.player1.data.get('hasPossession')) {
-      this.drop(this.player1);
+    } else if (
+      this.keys.s.isDown &&
+      this.player1.data.get('hasPossession') &&
+      !this.player1.data.get('isShooter')
+    ) {
+      this.dropBall(this.player1);
     }
     if (this.keys.space.isDown && this.player1.data.get('hasPossession')) {
-      this.shoot(this.player1);
+      this.shootBall(this.player1);
     }
 
     this.player2.body.setVelocityX(0);
@@ -459,12 +463,13 @@ export default class Play extends Phaser.Scene {
       this.player2.body.setVelocityY(-this.playerMovement.ballJumpSpeed);
     } else if (
       this.keys.down.isDown &&
-      this.player2.data.get('hasPossession')
+      this.player2.data.get('hasPossession') &&
+      !this.player2.data.get('isShooter')
     ) {
-      this.drop(this.player2);
+      this.dropBall(this.player2);
     }
     if (this.keys.shift.isDown && this.player2.data.get('hasPossession')) {
-      this.shoot(this.player2);
+      this.shootBall(this.player2);
     }
   }
 
@@ -485,14 +490,14 @@ export default class Play extends Phaser.Scene {
     return 1;
   }
 
-  shoot(player) {
+  shootBall(player) {
     player.data.set('hasPossession', false);
     this.gameState.shotReleased = true;
     this.ball.body.setVelocityX(this.getShotSpeed(player).x);
     this.ball.body.setVelocityY(this.getShotSpeed(player).y);
   }
 
-  drop(player) {
+  dropBall(player) {
     player.data.set('hasPossession', false);
     this.gameState.shotReleased = true;
     this.ball.body.setVelocityX(this.getDropSpeed(player).x);
