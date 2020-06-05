@@ -11,6 +11,7 @@ import rimBounceSound from './assets/rim-bounce.m4a';
 import ballBounceSound from './assets/ball-bounce.m4a';
 import swishSound1 from './assets/swish.m4a';
 
+const POSSESSION_CHANGE_DEBOUNCE = 200;
 const DEFAULT_GAME_STATE = {
   lastPossession: null,
   wasAboveRim: false,
@@ -25,6 +26,7 @@ const DEFAULT_GAME_STATE = {
   canScore: true,
   rebounderGrounded: false,
   hasBallTouchedRimOrRebounder: false,
+  canChangePossession: true,
 };
 
 export default class Play extends Phaser.Scene {
@@ -496,7 +498,7 @@ export default class Play extends Phaser.Scene {
       player.data.set('tips', 0);
       this.texts.playerScore[i].text = this.getPlayerScoreText(player);
     });
-    this.setPlayerPossession(this.player1);
+    this.setPlayerPossession(this.player1, true);
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
@@ -637,7 +639,7 @@ export default class Play extends Phaser.Scene {
 
     const shooter = this.getShooter();
     const rebounder = this.getRebounder();
-    this.setPlayerPossession(shooter);
+    this.setPlayerPossession(shooter, true);
     shooter.x = this.shootingSpots[this.gameState.shootingSpotNum];
     rebounder.x = this.rebounderPosition;
 
@@ -887,8 +889,8 @@ export default class Play extends Phaser.Scene {
     this.setPlayerPossession(player);
   }
 
-  setPlayerPossession(player) {
-    if (!player) {
+  setPlayerPossession(player, force = false) {
+    if (!player || (!this.canChangePossession && !force)) {
       return;
     }
 
@@ -896,6 +898,10 @@ export default class Play extends Phaser.Scene {
     this.gameState.lastPossession = player.name;
     const otherPlayer = this.getOtherPlayer(player);
     otherPlayer.data.set('hasPossession', false);
+    this.canChangePossession = false;
+    setTimeout(() => {
+      this.canChangePossession = true;
+    }, POSSESSION_CHANGE_DEBOUNCE);
   }
 
   getOtherPlayer(player) {
