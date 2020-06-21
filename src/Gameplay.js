@@ -25,8 +25,10 @@ const DEFAULT_GAME_STATE = {
   soundOn: true,
   canScore: true,
   rebounderGrounded: false,
+  rebounderGroundedWithPossession: false,
   hasBallTouchedRimOrRebounder: false,
   canChangePossession: true,
+  reboundedTwice: false,
 };
 
 export default class Play extends Phaser.Scene {
@@ -404,7 +406,7 @@ export default class Play extends Phaser.Scene {
     }
 
     if (!this.gameState.gameOver && this.gameState.shotReleased) {
-      if (this.gameState.ballHitGround || this.gameState.rebounderGrounded) {
+      if (this.gameState.ballHitGround || this.gameState.reboundedTwice) {
         this.startShotEnd();
       }
 
@@ -668,6 +670,8 @@ export default class Play extends Phaser.Scene {
     this.gameState.hasRebounded = false;
     this.gameState.canScore = true;
     this.gameState.rebounderGrounded = false;
+    this.gameState.rebounderGroundedWithPossession = false;
+    this.gameState.reboundedTwice = false;
     this.gameState.hasBallTouchedRimOrRebounder = false;
     this.gameState.isGoaltending = false;
   }
@@ -804,6 +808,9 @@ export default class Play extends Phaser.Scene {
   }
 
   playerCourtCollision(player, court) {
+    if (player.data.get('hasPossession')) {
+      this.gameState.rebounderGroundedWithPossession = true;
+    }
     if (!player.data.get('isShooter') && this.gameState.hasRebounded) {
       this.gameState.rebounderGrounded = true;
     }
@@ -882,8 +889,15 @@ export default class Play extends Phaser.Scene {
       return;
     }
 
+    this.gameState.reboundedTwice =
+      this.gameState.hasRebounded && !player.data.get('hasPossession');
+
     if (!player.data.get('isShooter')) {
       this.gameState.hasRebounded = true;
+    }
+
+    if (player.body.touching.down) {
+      this.gameState.rebounderGroundedWithPossession = true;
     }
 
     this.setPlayerPossession(player);
